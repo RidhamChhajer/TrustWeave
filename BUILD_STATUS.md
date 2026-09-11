@@ -1,8 +1,8 @@
 # Build checkpoint
 
 - Scope: all remaining phases authorized; proceed sequentially with focused checks.
-- Current phase: 18 — Normal Communication (complete).
-- Completed phases: 1–18.
+- Current phase: 19 — Gradual Degradation (complete).
+- Completed phases: 1–19.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
   pytest settings, environment example and ignore rules.
@@ -101,11 +101,17 @@
   12 session observations, 1 required new-relationship verification, 0 unnecessary
   verifications; minimum 58.5 at bootstrap, final trust 99.50566831424997.
   Each observation starts a session; successful bootstrap adds a fresh TLS epoch.
-- Next phase: PHASE 19 — Experiment 2: Gradual Degradation.
+- Phase 19: experiments/gradual.py; raw results artifacts/gradual.json.
+  Command: `.venv/Scripts/python.exe -m experiments.gradual`: acceptance passed.
+  42 observations; first degradation trigger tick 30 (zero-based), trust 47.5204,
+  delta -3.8516: absolute low threshold, not sudden-drop trigger.
+  13 total verifications: bootstrap plus repeated prompts while abnormal inputs persist.
+  Successful verification's trust floor does not remove the abnormal condition; no bypass cooldown.
+- Next phase: PHASE 20 — Experiment 3: Sudden Trust Drop.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing commit `phase-18-experiment-normal`; resolve its
+- Latest Git commit: containing commit `phase-19-experiment-gradual`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.
