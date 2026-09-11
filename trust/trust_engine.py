@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import math
+from trust.anomaly import trust_delta
 
 SIGNALS = ("handshake", "rtt", "continuity", "timing", "renegotiation")
 
@@ -26,6 +27,10 @@ class Assessment:
     previous: float
     current_score: float
     score: float
+
+    @property
+    def delta(self):
+        return trust_delta(self.score, self.previous)
 
 
 class TrustEngine:

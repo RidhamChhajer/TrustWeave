@@ -19,3 +19,7 @@ no empirical evidence justifies favoring a signal yet. Weights must sum to one.
 EMA: S = alpha * current + (1-alpha) * previous, with alpha=0.3 and initial S=45.
 Policy objects validate values; missing raw signals already map to 50 in normalization.
 New relationships will require verification independently of improvements in metadata.
+
+Phase 8 exposes delta = current S - previous S separately from S. It is a difference
+per assessment, not a derivative per second; assessment cadence must be fixed in
+comparisons. A 93→71 drop yields -22 even though 71 exceeds a low threshold of 50.

@@ -2,6 +2,12 @@ import pytest
 
 from trust.normalization import Baselines, normalize_snapshot, normalize_handshake_latency
 from trust.trust_engine import SIGNALS, TrustEngine, TrustPolicy
+from trust.anomaly import trust_delta
+
+
+def test_independent_delta():
+    assert [trust_delta(current, previous) for previous, current in [(90, 88), (90, 60), (60, 75)]] == [-2, -30, 15]
+    assert 71 > 50 and trust_delta(71, 93) <= -10
 
 
 def test_ema_degradation_and_recovery():

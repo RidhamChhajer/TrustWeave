@@ -1,7 +1,7 @@
 # Build checkpoint
 
 - Milestone: 2 — phase 5 authorized and completed.
-- Current phase: 7 — Trust Assessment Engine (complete).
+- Current phase: 8 — Trust Delta (complete).
 - Completed phases: 1, 2, 3, 4, 5. No phase-6-or-later implementation.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
@@ -66,7 +66,8 @@
 - Phase 6: trust/normalization.py and docs/algorithms.md; configurable bounded ramps,
   missing-value policy, five-input adapter. Focused check: 1 passed in 0.04s.
 - Phase 7: deterministic configurable five-weight EMA; focused checks: 2 passed in 0.04s.
-- Next phase: PHASE 8 — Trust Delta.
+- Phase 8: independent delta property and sharp-drop check; focused checks: 3 passed.
+- Next phase: PHASE 9 — Relationship Memory Store.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
