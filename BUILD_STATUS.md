@@ -1,8 +1,8 @@
 # Build checkpoint
 
-- Milestone: 2 — phase 5 authorized and completed.
-- Current phase: 14 — Full Integration (complete).
-- Completed phases: 1, 2, 3, 4, 5. No phase-6-or-later implementation.
+- Scope: all remaining phases authorized; proceed sequentially with focused checks.
+- Current phase: 15 — Dashboard (complete).
+- Completed phases: 1–15.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
   pytest settings, environment example and ignore rules.
@@ -79,11 +79,16 @@
   helper; no high-trust lifetime extension. Policy check passed.
 - Phase 14: metadata→normalization→EMA/delta→trigger→live gate→verification→fresh TLS
   reconnect→history. Two focused checks passed; adaptive live demo succeeded (trust 90.80).
-- Next phase: PHASE 15 — Dashboard.
+- Phase 15: dashboard/runtime.py, app.py, index.html and tests/test_dashboard.py.
+  Loopback-only UI controls real TLS messaging with explicitly simulated human verification;
+  displays metadata, trust history, trigger markers and public key epoch identifiers.
+  Command: `.venv/Scripts/python.exe -m pytest -q tests/test_dashboard.py`:
+  1 passed in 0.23s. No deployment or external services.
+- Next phase: PHASE 16 — Event/Audit Logging.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing commit `phase-5-metadata-collection`; resolve its
+- Latest Git commit: containing commit `phase-15-dashboard`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.
