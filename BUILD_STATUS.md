@@ -1,7 +1,7 @@
 # Build checkpoint
 
 - Milestone: 2 — phase 5 authorized and completed.
-- Current phase: 12 — Live Verification Gate (complete).
+- Current phase: 13 — Key Lifecycle Controller (complete).
 - Completed phases: 1, 2, 3, 4, 5. No phase-6-or-later implementation.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
@@ -75,7 +75,9 @@
   simulation explicitly labelled; outcome/timeout check passed.
 - Phase 12: SessionGuard binds EMA/history/trigger to a transport gate; pending
   verification blocks send/delivery; failure closes session. Live/security checks: 13 passed.
-- Next phase: PHASE 13 — Key Lifecycle Controller.
+- Phase 13: bounded 300-second lifecycle policy; fresh authenticated reconnect
+  helper; no high-trust lifetime extension. Policy check passed.
+- Next phase: PHASE 14 — Full System Integration.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
