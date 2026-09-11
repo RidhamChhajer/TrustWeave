@@ -1,13 +1,14 @@
 import asyncio
 import struct
 from contextlib import asynccontextmanager
-from dataclasses import replace
 
 import pytest
 
 from config.settings import Settings
 from network.connection import ConnectionFailure, FramedConnection, PeerClosed, ProtocolError
-from network.plain import connect
+from network.connection import SessionInfo
+from time import perf_counter
+import uuid
 
 
 @asynccontextmanager
@@ -15,7 +16,9 @@ async def pair(settings=None):
     settings = settings or Settings(port=0, io_timeout=0.3)
     accepted = asyncio.Queue()
     server = await asyncio.start_server(lambda r, w: accepted.put_nowait((r, w)), "127.0.0.1", 0)
-    a = await connect(replace(settings, port=server.sockets[0].getsockname()[1]))
+    start = perf_counter()
+    r, w = await asyncio.open_connection("127.0.0.1", server.sockets[0].getsockname()[1])
+    a = FramedConnection(r, w, settings, SessionInfo(uuid.uuid4().hex, elapsed_ms=(perf_counter() - start) * 1000))
     r, w = await asyncio.wait_for(accepted.get(), 1)
     b = FramedConnection(r, w, settings)
     try:

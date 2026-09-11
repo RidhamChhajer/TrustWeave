@@ -23,11 +23,72 @@ FastAPI and Uvicorn are installed as specified, but no API/dashboard is implemen
 
 See `BUILD_STATUS.md` for phase checkpoints and exact test evidence.
 
-## Phase-2 networking checkpoint
+## Run the completed milestone
 
-Run Bob with `python -m client.bob` and then Alice with `python -m client.alice`
-using the virtual-environment interpreter. This checkpoint uses temporary plaintext
-for socket validation only; the completed milestone will require mutual TLS.
+For a noninteractive demonstration with temporary, freshly generated encrypted
+credentials and real loopback TCP sockets:
+
+```powershell
+.\.venv\Scripts\python.exe -m client.demo
+```
+
+The output shows `TLSv1.3`, a negotiated authenticated cipher, the same session ID
+at Alice and Bob, frame byte counts, `DEMO_SUCCESS`, and connection closure.
+Three random binary messages make a round trip; messages/passwords/keys are never
+printed. The temporary encrypted credential directory is removed after the demo.
+
+For separate terminal processes, create persistent development identities first:
+
+```powershell
+.\.venv\Scripts\python.exe -m client.provision
+```
+
+Enter and confirm a separate password of at least 12 UTF-8 bytes for the CA, Alice,
+and Bob. Input is hidden; an insecure terminal fallback is refused. Provisioning
+refuses an existing output directory. Passwords are not saved and cannot be recovered.
+
+In terminal 1:
+
+```powershell
+.\.venv\Scripts\python.exe -m client.bob
+```
+
+In terminal 2:
+
+```powershell
+.\.venv\Scripts\python.exe -m client.alice
+```
+
+Enter the corresponding identity password in each terminal. Alice verifies three
+encrypted round trips and exits; Bob keeps listening until Ctrl+C. These CLI endpoints
+demonstrate message transport, not an interactive chat UI. Use `--help` for credential,
+host, port and server-name options. There is no plaintext fallback in either endpoint.
+The temporary phase-2 plaintext connector was removed; raw framing tests remain test-only.
+
+## Application interface
+
+`network.secure.connect(settings, credentials, password_callback, server_hostname=...)`
+returns an authenticated connection with `send(bytes)`, `receive() -> bytes`, `close()`,
+and immutable `info`. `SecureServer.start(settings, credentials, password_callback, handler)`
+invokes the asynchronous handler only after peer certificate and fingerprint validation.
+Both objects support asynchronous context managers. Bob's handler implements an echo.
+
+`info` exposes session ID, connection state, public peer fingerprint, TLS version and
+cipher. Alice's elapsed time includes connection, TLS and encrypted session-ID receipt;
+Bob's elapsed time is `None` because asyncio supplies the accepted stream after TLS.
+`key_id` is a non-secret connection-epoch label for TLS traffic keys, not an actual key,
+an exported TLS identifier, or a cryptographic fingerprint. A reconnect gets a fresh ID.
+
+Frames use a 4-byte unsigned big-endian length and up to 1 MiB of bytes. The length and
+payload are encrypted together inside TLS. Empty messages are supported. Invalid/truncated
+frames, operation timeouts, and TLS failures close the connection; concurrent receives
+are rejected, sends are serialized, and cleanup has a bounded per-writer deadline.
+Bob owns accepted sockets before TLS starts, so shutdown cancels incomplete handshakes
+as well as established sessions. Application handlers must cooperate with cancellation.
+
+The metadata object and event logger never receive message bodies. The framing layer
+necessarily handles bytes at the endpoints; future trust modules must consume metadata
+only. No trust module or verification trigger is implemented in this milestone.
 
 ## Cryptographic foundation
 
@@ -45,3 +106,33 @@ are separate concepts. No custom key exchange, cipher, or second encryption laye
 
 On this machine, Windows Application Control blocks cryptography's native DLL in the
 Codex sandbox. Tests run successfully using approved execution outside that sandbox.
+
+## Verification and limitations
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m pip check
+```
+
+Tests cover actual TCP/TLS exchanges, a test-only relay capturing opaque TLS records,
+post-handshake ciphertext corruption, certificate/pin/hostname failures, missing client
+certificates, TLS-version rejection, malformed framing, timeouts, reconnects, concurrency,
+metadata separation and log leakage. No TLS traffic key export is enabled, including
+when `SSLKEYLOGFILE` is set. Tests and the demo generate new credentials; no cryptographic
+secret is hard-coded. Test byte markers are message fixtures, not cryptographic keys.
+
+This is an experimental local prototype. Its trusted bootstrap creates both endpoint
+identities on one machine. For separate machines, transfer only the appropriate endpoint
+directory securely; never distribute the CA private key or the other endpoint's key.
+Protect public trust/pin files and encrypted key files with OS access controls. Default
+Bob certificates cover localhost, 127.0.0.1 and bob.local; other names need properly
+provisioned certificates. Do not disable hostname validation to bypass this requirement.
+Identity certificates expire after 30 days; this milestone does not renew them, revoke
+them, rotate keys adaptively, or implement human out-of-band verification. Python cannot
+guarantee wiping all secret bytes from memory. Endpoint/OS compromise is outside scope.
+
+Milestone 2 begins with PHASE 5 — Network and Session Metadata Collection.
+
+Implementation references: [Python TLS](https://docs.python.org/3.10/library/ssl.html),
+[accepted-socket TLS](https://docs.python.org/3.10/library/asyncio-eventloop.html#asyncio.loop.connect_accepted_socket),
+and [cryptography X.509](https://cryptography.io/en/stable/x509/tutorial/).

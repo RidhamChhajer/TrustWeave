@@ -1,8 +1,8 @@
 # Build checkpoint
 
 - Milestone: 1 — phases 1–4 only.
-- Current phase: 3 — Cryptographic Identity and Key Establishment (complete).
-- Completed phases: 1, 2, 3.
+- Current phase: 4 — Encrypted Communication (complete).
+- Completed phases: 1, 2, 3, 4. Milestone 1 complete; no later phases implemented.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
   pytest settings, environment example and ignore rules.
 - Decision: mutual TLS 1.3 using Python ssl/OpenSSL; cryptography provisions identities.
@@ -24,13 +24,38 @@
   bidirectional BIO exchanges, and disabled key logging/tickets passed.
 - Environment: cryptography's native DLL was blocked inside the Windows sandbox;
   the exact test command passed with approved desktop execution.
-- Limitations: phase-2 CLI remains temporarily plaintext until phase-4 integration.
-  TLS foundation is tested directly with OpenSSL MemoryBIO; traffic keys are not exported.
-  Development CA/pin provisioning is trusted local setup, not an OOB workflow.
-  Local Python/OpenSSL is old.
+- Phase 4 files: network/secure.py and connection.py; client/alice.py, bob.py,
+  provision.py, passwords.py, demo.py; tests/conftest.py, test_secure.py, test_cli.py,
+  wire_proxy.py; existing framing/crypto tests; README, pytest.ini and this checkpoint.
+  Removed network/plain.py (the temporary development connector, recoverable from phase 2).
+- Phase 4 validation: `.venv/Scripts/python.exe -m pytest -q`: **50 passed in 2.73s**.
+  Includes real TLS wire capture, post-handshake ciphertext corruption rejected before
+  delivery, no plaintext/password/private-key markers in application logs, identical
+  public session IDs, separate directions, empty/1-MiB frames, reconnects, invalid
+  pins/plaintext/TLS1.2, operation/handshake deadlines, active and incomplete-handshake
+  shutdown, CLI help/error sanitization, and refusal of echoed password input.
+- Regression fixed: closing asyncio.start_server alone left incomplete TLS handshakes
+  alive until their timeout. The server now owns raw accepted sockets and TLS tasks via
+  loop.connect_accepted_socket; shutdown cancels pending handshakes as well as sessions.
+  The new shutdown test first failed, then passed after this correction.
+- Final demo: `.venv/Scripts/python.exe -m client.demo` exited 0; actual local sockets
+  negotiated TLSv1.3 / TLS_AES_256_GCM_SHA384, exchanged three 96-byte messages in both
+  directions, emitted DEMO_SUCCESS, and closed both endpoints. No payload/key output.
+- Final dependency check: `.venv/Scripts/python.exe -m pip check`: no broken requirements.
+- Final source check: `git diff --check` passed. An earlier elevated invocation omitted
+  the repository ownership exception and failed; rerunning under the sandbox owner passed.
+- Limitations: experimental local demo, old Python/OpenSSL runtime, trusted local
+  development CA/pin provisioning, no production PKI/revocation or human OOB workflow.
+  Certificates expire after 30 days. TLS traffic keys remain inside OpenSSL, so key
+  compatibility is verified through authenticated decryption, not raw key extraction.
+  key_id is a non-secret connection-epoch label, not an exported TLS key identifier.
+  Python does not guarantee zeroization; OS permissions must protect credential/pin files.
+  Application handlers must cooperate with asyncio cancellation.
 - Blockers: none.
-- Next phase: PHASE 4 — Encrypted Communication.
+- Next phase: PHASE 5 — Network and Session Metadata Collection.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
-- Latest Git commit: containing commit `phase-3-cryptographic-foundation`; resolve using `git log -1`.
+- Git: phase 3 is 9239af1.
+- Latest Git commit: containing commit `phase-4-encrypted-communication`; resolve its
+  hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.

@@ -25,10 +25,15 @@ class ProtocolError(ConnectionFailure):
 class SessionInfo:
     session_id: str
     connected: bool = True
-    elapsed_ms: float = 0.0
+    elapsed_ms: float | None = None
     protocol: str | None = None
     cipher: str | None = None
     peer_fingerprint: str | None = None
+
+    @property
+    def key_id(self) -> str:
+        """Connection epoch label, not a key or TLS secret."""
+        return self.session_id + ":tls-traffic"
 
 
 async def close_writer(writer: asyncio.StreamWriter, timeout: float) -> None:
@@ -37,6 +42,9 @@ async def close_writer(writer: asyncio.StreamWriter, timeout: float) -> None:
         await asyncio.wait_for(writer.wait_closed(), timeout)
     except (OSError, asyncio.TimeoutError):
         writer.transport.abort()
+    except asyncio.CancelledError:
+        writer.transport.abort()
+        raise
 
 
 class FramedConnection:
@@ -77,7 +85,7 @@ class FramedConnection:
         except asyncio.CancelledError:
             await self.close()
             raise
-        except (OSError, asyncio.TimeoutError) as exc:
+        except (OSError, asyncio.TimeoutError):
             await self.close()
             raise ConnectionFailure("send failed") from None
         event("FRAME_SENT", session_id=self.info.session_id, byte_count=len(payload))

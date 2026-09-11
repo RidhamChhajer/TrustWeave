@@ -11,13 +11,6 @@ from crypto.key_exchange import AuthenticationError, authenticate, context
 from tests.tls_helpers import TLSChannel
 
 
-@pytest.fixture(scope="module")
-def identities(tmp_path_factory):
-    path = tmp_path_factory.mktemp("pki") / "credentials"
-    passwords = {role: secrets.token_urlsafe(24).encode() for role in ("ca", "alice", "bob")}
-    return provision(path, passwords), passwords
-
-
 def channel(identities, hostname="localhost"):
     creds, passwords = identities
     return TLSChannel(context(creds["alice"], lambda: passwords["alice"], server=False),
