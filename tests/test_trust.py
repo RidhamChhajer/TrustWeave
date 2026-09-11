@@ -1,6 +1,17 @@
 import pytest
 
 from trust.normalization import Baselines, normalize_snapshot, normalize_handshake_latency
+from trust.trust_engine import SIGNALS, TrustEngine, TrustPolicy
+
+
+def test_ema_degradation_and_recovery():
+    engine = TrustEngine(initial=82)
+    result = engine.assess(dict.fromkeys(SIGNALS, 65))
+    assert result.score == pytest.approx(76.9)
+    assert engine.assess(dict.fromkeys(SIGNALS, 0)).score < result.score
+    assert engine.assess(dict.fromkeys(SIGNALS, 100)).score > 53.83
+    with pytest.raises(ValueError):
+        TrustPolicy(weights=(1, 1, 1, 1, 1))
 
 
 def test_normalization_boundaries_and_missing():

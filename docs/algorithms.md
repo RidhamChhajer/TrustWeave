@@ -13,3 +13,9 @@ timing 100 ms. These are declared prototype starting values, not universal netwo
 constants. `Baselines` and `NormalizationPolicy` make them replaceable. Peer IP is not
 device authentication; latency includes scheduling/congestion. All scores describe
 contextual consistency, never proof of an attack. Raw measurements remain unchanged.
+
+Phase 7 combines all five normalized inputs with equal 0.2 weights initially, because
+no empirical evidence justifies favoring a signal yet. Weights must sum to one.
+EMA: S = alpha * current + (1-alpha) * previous, with alpha=0.3 and initial S=45.
+Policy objects validate values; missing raw signals already map to 50 in normalization.
+New relationships will require verification independently of improvements in metadata.
