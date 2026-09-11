@@ -1,7 +1,7 @@
 # Build checkpoint
 
 - Milestone: 2 — phase 5 authorized and completed.
-- Current phase: 13 — Key Lifecycle Controller (complete).
+- Current phase: 14 — Full Integration (complete).
 - Completed phases: 1, 2, 3, 4, 5. No phase-6-or-later implementation.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
@@ -77,7 +77,9 @@
   verification blocks send/delivery; failure closes session. Live/security checks: 13 passed.
 - Phase 13: bounded 300-second lifecycle policy; fresh authenticated reconnect
   helper; no high-trust lifetime extension. Policy check passed.
-- Next phase: PHASE 14 — Full System Integration.
+- Phase 14: metadata→normalization→EMA/delta→trigger→live gate→verification→fresh TLS
+  reconnect→history. Two focused checks passed; adaptive live demo succeeded (trust 90.80).
+- Next phase: PHASE 15 — Dashboard.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.

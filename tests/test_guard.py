@@ -23,13 +23,17 @@ def test_live_gate_pending_pass_and_failure(identities):
                             with pytest.raises(ConnectionFailure):
                                 await connection.send(b"must stay blocked")
                             return outcome
-                        guard = SessionGuard(connection, store, responder)
+                        async def reconnect():
+                            return await connect(replace(settings, port=server.port), creds["alice"], lambda: passwords["alice"])
+                        guard = SessionGuard(connection, store, responder, reconnect=reconnect)
                         with pytest.raises(ConnectionFailure):
                             await connection.send(b"not verified")
                         await guard.assess({})
                         if outcome == Outcome.SUCCESS:
-                            await connection.send(b"allowed")
-                            assert await connection.receive() == b"allowed"
+                            assert guard.connection.info.session_id != connection.info.session_id
+                            await guard.connection.send(b"allowed")
+                            assert await guard.connection.receive() == b"allowed"
+                            await guard.close()
                         else:
                             assert guard.restricted and not connection.info.connected
     asyncio.run(run())

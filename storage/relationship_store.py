@@ -67,6 +67,17 @@ class RelationshipStore:
             self.db.execute("UPDATE relationships SET verified=?,successes=successes+?,failures=failures+?,last_verified=CASE WHEN ? THEN ? ELSE last_verified END WHERE id=(SELECT relationship_id FROM sessions WHERE id=?)",
                             (int(success), int(success), int(not success), int(success), timestamp(), request.session_id))
 
+    def key_event(self, session_id, action, key_id):
+        if action not in {"KEEP_CURRENT_KEY", "STANDARD_ROTATION", "REESTABLISH_KEY", "RESTRICT_SESSION"}:
+            raise ValueError("invalid lifecycle action")
+        with self.db:
+            self.db.execute("INSERT INTO key_events(session_id,timestamp,action,key_id) VALUES(?,?,?,?)",
+                            (session_id, timestamp(), action, key_id))
+
+    def restrict_relationship(self, relationship_id):
+        with self.db:
+            self.db.execute("UPDATE relationships SET verified=0 WHERE id=?", (relationship_id,))
+
     def close(self):
         self.db.close()
 
