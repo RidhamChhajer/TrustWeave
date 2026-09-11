@@ -1,8 +1,8 @@
 # Build checkpoint
 
 - Scope: all remaining phases authorized; proceed sequentially with focused checks.
-- Current phase: 17 — Controlled Anomaly Simulation (complete).
-- Completed phases: 1–17.
+- Current phase: 18 — Normal Communication (complete).
+- Completed phases: 1–18.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
   pytest settings, environment example and ignore rules.
@@ -96,11 +96,16 @@
   reconnects and persisted audit; JSON retains raw inputs, timing and decisions.
   Command: `.venv/Scripts/python.exe -m pytest -q tests/test_experiments.py`: 1 passed in 0.19s.
   Settings/score trajectories are reproducible; randomized identities and wall timings are not.
-- Next phase: PHASE 18 — Experiment 1: Normal Communication.
+- Phase 18: experiments/normal.py; raw results artifacts/normal.json (generated, ignored).
+  Command: `.venv/Scripts/python.exe -m experiments.normal`: acceptance passed.
+  12 session observations, 1 required new-relationship verification, 0 unnecessary
+  verifications; minimum 58.5 at bootstrap, final trust 99.50566831424997.
+  Each observation starts a session; successful bootstrap adds a fresh TLS epoch.
+- Next phase: PHASE 19 — Experiment 2: Gradual Degradation.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing commit `phase-17-experiment-framework`; resolve its
+- Latest Git commit: containing commit `phase-18-experiment-normal`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.
