@@ -1,8 +1,8 @@
 # Build checkpoint
 
 - Scope: all remaining phases authorized; proceed sequentially with focused checks.
-- Current phase: 16 — Event/Audit Logging (complete).
-- Completed phases: 1–16.
+- Current phase: 17 — Controlled Anomaly Simulation (complete).
+- Completed phases: 1–17.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
   pytest settings, environment example and ignore rules.
@@ -90,11 +90,17 @@
   Strict numeric/enum whitelist rejects payload fields; repeated close is idempotent.
   Command: `.venv/Scripts/python.exe -m pytest -q tests/test_audit.py tests/test_dashboard.py`:
   2 passed in 0.30s. Audit is local SQLite, not tamper-evident or remotely replicated.
-- Next phase: PHASE 17 — Controlled Anomaly Simulation.
+- Phase 17: experiments/controller.py, runner.py, package and tests/test_experiments.py.
+  Deterministic raw-metadata perturbations cover all seven requested anomaly types.
+  Runner uses actual mutually authenticated TLS, simulated metadata/OOB labels, real
+  reconnects and persisted audit; JSON retains raw inputs, timing and decisions.
+  Command: `.venv/Scripts/python.exe -m pytest -q tests/test_experiments.py`: 1 passed in 0.19s.
+  Settings/score trajectories are reproducible; randomized identities and wall timings are not.
+- Next phase: PHASE 18 — Experiment 1: Normal Communication.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing commit `phase-16-audit-logging`; resolve its
+- Latest Git commit: containing commit `phase-17-experiment-framework`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.
