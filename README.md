@@ -22,3 +22,9 @@ No `.env` file is loaded implicitly. Never put secrets in configuration or sourc
 FastAPI and Uvicorn are installed as specified, but no API/dashboard is implemented.
 
 See `BUILD_STATUS.md` for phase checkpoints and exact test evidence.
+
+## Phase-2 networking checkpoint
+
+Run Bob with `python -m client.bob` and then Alice with `python -m client.alice`
+using the virtual-environment interpreter. This checkpoint uses temporary plaintext
+for socket validation only; the completed milestone will require mutual TLS.
