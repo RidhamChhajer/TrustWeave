@@ -7,18 +7,23 @@ import socket
 import uuid
 
 from config.settings import Settings
-from crypto.identity import Credentials
+from crypto.identity import Credentials, fingerprint
+from cryptography import x509
 from crypto.key_exchange import AuthenticationError, authenticate, context
 from event_log import event
 from network.connection import ConnectionFailure, FramedConnection, SessionInfo, close_writer
+from network.metrics import SessionMetrics
+from network.session import SessionContext
+from trust.signal_collector import ContextSignalCollector
 
 Handler = Callable[[FramedConnection], Awaitable[None]]
 
 
 async def connect(settings: Settings, credentials: Credentials, password: Callable[[], bytes],
-                  *, server_hostname: str = "localhost") -> FramedConnection:
+                  *, server_hostname: str = "localhost", collector: ContextSignalCollector | None = None) -> FramedConnection:
     """No plaintext or unverified connection is returned to the caller."""
     ctx = context(credentials, password, server=False)
+    local_pin = fingerprint(x509.load_pem_x509_certificate(credentials.certificate.read_bytes()))
     writer = None
     start = perf_counter()
     try:
@@ -27,13 +32,17 @@ async def connect(settings: Settings, credentials: Credentials, password: Callab
                                     server_hostname=server_hostname,
                                     ssl_handshake_timeout=settings.connect_timeout),
             settings.connect_timeout)
+        handshake_ms = (perf_counter() - start) * 1000
         peer = authenticate(writer.get_extra_info("ssl_object"), credentials.expected_peer_pin)
         session_id = (await asyncio.wait_for(reader.readexactly(16), settings.io_timeout)).hex()
         info = SessionInfo(session_id, elapsed_ms=(perf_counter() - start) * 1000,
                            protocol=peer.protocol, cipher=peer.cipher, peer_fingerprint=peer.fingerprint)
         event("HANDSHAKE_COMPLETED", session_id=session_id, elapsed_ms=info.elapsed_ms,
               protocol=peer.protocol, cipher=peer.cipher)
-        return FramedConnection(reader, writer, settings, info)
+        session = SessionContext.create(session_id, local_pin, peer.fingerprint, writer.get_extra_info("peername")[0])
+        metrics = SessionMetrics(session, collector if collector is not None else ContextSignalCollector(),
+                                 handshake_ms, "tcp_tls_connect")
+        return FramedConnection(reader, writer, settings, info, metrics)
     except asyncio.CancelledError:
         if writer is not None:
             await close_writer(writer, settings.close_timeout)
@@ -56,6 +65,8 @@ class SecureServer:
         self._listener: socket.socket | None = None
         self._accept_task: asyncio.Task | None = None
         self._sockets: set[socket.socket] = set()
+        self.collector = ContextSignalCollector()
+        self._local_pin = fingerprint(x509.load_pem_x509_certificate(credentials.certificate.read_bytes()))
 
     @classmethod
     async def start(cls, settings: Settings, credentials: Credentials,
@@ -93,12 +104,13 @@ class SecureServer:
         reader = asyncio.StreamReader()
         protocol = asyncio.StreamReaderProtocol(reader)
         writer = None
+        handshake_start = perf_counter()
         try:
             transport, _ = await loop.connect_accepted_socket(
                 lambda: protocol, accepted, ssl=ctx,
                 ssl_handshake_timeout=self.settings.connect_timeout)
             writer = asyncio.StreamWriter(transport, protocol, reader, loop)
-            await self._handle(reader, writer)
+            await self._handle(reader, writer, (perf_counter() - handshake_start) * 1000)
         except asyncio.CancelledError:
             raise
         except (OSError, asyncio.TimeoutError):
@@ -108,7 +120,7 @@ class SecureServer:
                 accepted.close()
             self._sockets.discard(accepted)
 
-    async def _handle(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+    async def _handle(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, handshake_ms: float) -> None:
         connection = None
         try:
             peer = authenticate(writer.get_extra_info("ssl_object"), self.credentials.expected_peer_pin)
@@ -119,7 +131,9 @@ class SecureServer:
             # asyncio supplies streams after TLS; server handshake duration is unavailable.
             info = SessionInfo(session_id, protocol=peer.protocol, cipher=peer.cipher,
                                peer_fingerprint=peer.fingerprint)
-            connection = FramedConnection(reader, writer, self.settings, info)
+            session = SessionContext.create(session_id, self._local_pin, peer.fingerprint, writer.get_extra_info("peername")[0])
+            metrics = SessionMetrics(session, self.collector, handshake_ms, "tls_handshake")
+            connection = FramedConnection(reader, writer, self.settings, info, metrics)
             event("HANDSHAKE_COMPLETED", session_id=session_id, protocol=peer.protocol, cipher=peer.cipher)
             await self.handler(connection)
         except AuthenticationError:

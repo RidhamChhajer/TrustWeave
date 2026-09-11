@@ -7,6 +7,7 @@ import uuid
 
 from config.settings import Settings
 from event_log import event
+from network.metrics import SessionMetrics
 
 
 class ConnectionFailure(Exception):
@@ -49,7 +50,7 @@ async def close_writer(writer: asyncio.StreamWriter, timeout: float) -> None:
 
 class FramedConnection:
     def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter,
-                 settings: Settings, info: SessionInfo | None = None):
+                 settings: Settings, info: SessionInfo | None = None, metrics: SessionMetrics | None = None):
         self._reader = reader
         self._writer = writer
         self._settings = settings
@@ -57,6 +58,7 @@ class FramedConnection:
         self._send_lock = asyncio.Lock()
         self._receiving = False
         self._closed = False
+        self.metrics = metrics
 
     @property
     def info(self) -> SessionInfo:
@@ -79,6 +81,8 @@ class FramedConnection:
                 self._check_open()
                 self._writer.write(struct.pack("!I", len(payload)) + payload)
                 await self._writer.drain()
+                if self.metrics is not None:
+                    self.metrics.frame("sent")
 
         try:
             await asyncio.wait_for(write(), self._settings.io_timeout)
@@ -124,6 +128,8 @@ class FramedConnection:
             raise ConnectionFailure("receive failed") from None
         finally:
             self._receiving = False
+        if self.metrics is not None:
+            self.metrics.frame("received")
         event("FRAME_RECEIVED", session_id=self.info.session_id, byte_count=len(payload))
         return payload
 

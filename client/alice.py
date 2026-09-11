@@ -5,6 +5,7 @@ import asyncio
 from dataclasses import replace
 from pathlib import Path
 import secrets
+from time import perf_counter
 
 from config.settings import Settings
 from client.passwords import read_password
@@ -18,9 +19,13 @@ async def run(settings: Settings, credentials: Credentials, password: bytes,
     async with await connect(settings, credentials, lambda: password, server_hostname=hostname) as connection:
         for _ in range(3):
             payload = secrets.token_bytes(96)
+            started = perf_counter()
             await connection.send(payload)
-            if await connection.receive() != payload:
+            response = await connection.receive()
+            elapsed_ms = (perf_counter() - started) * 1000
+            if response != payload:
                 raise RuntimeError("bidirectional exchange failed")
+            connection.metrics.record_round_trip(elapsed_ms)
         event("DEMO_SUCCESS", session_id=connection.info.session_id)
 
 

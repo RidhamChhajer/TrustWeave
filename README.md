@@ -2,7 +2,7 @@
 
 Experimental Computer Network Technology project. The three original specifications
 define the later adaptive verification layer. This milestone implements phases 1–4
-only: a tested, authenticated Alice–Bob communication foundation.
+foundation is complete. Phase 5 now adds raw metadata collection above that transport.
 
 ## Development setup (PowerShell)
 
@@ -88,7 +88,7 @@ as well as established sessions. Application handlers must cooperate with cancel
 
 The metadata object and event logger never receive message bodies. The framing layer
 necessarily handles bytes at the endpoints; future trust modules must consume metadata
-only. No trust module or verification trigger is implemented in this milestone.
+only. No trust scoring or verification trigger is implemented yet.
 
 ## Cryptographic foundation
 
@@ -131,7 +131,36 @@ Identity certificates expire after 30 days; this milestone does not renew them, 
 them, rotate keys adaptively, or implement human out-of-band verification. Python cannot
 guarantee wiping all secret bytes from memory. Endpoint/OS compromise is outside scope.
 
-Milestone 2 begins with PHASE 5 — Network and Session Metadata Collection.
+## Phase 5 — Raw metadata
+
+Each secure connection exposes `connection.metrics`. Read
+`connection.metrics.collector.measurements` for its bounded in-memory signal stream.
+Pass a shared `ContextSignalCollector` to `connect(..., collector=collector)` to count
+reconnects in the same process; Bob shares one collector across its connections.
+
+Records contain UTC timestamp, session ID, a symmetric SHA-256 relationship ID derived
+from both public identity fingerprints, signal name, raw value, source and
+`normalized_value=None`. There is no normalization, scoring or database yet.
+
+- Handshake latency: Alice measures TCP + TLS connection time (before reading the
+  session ID); Bob measures its accepted-socket TLS handshake. Sources distinguish them.
+- RTT: Alice's sequential echo exchanges report measured application round trips,
+  including processing/scheduling overhead. Variation is population standard deviation
+  over the last 32 samples. Generic connections report RTT unavailable until an
+  application records a matched round trip; no RTT is inferred from unrelated messages.
+- Continuity: authenticated relationship ID and observed peer IP. IP is not proof of
+  device identity or network-path continuity; port changes are deliberately excluded.
+- Timing: intervals between completed frames, separately for each direction. The
+  first interval is unavailable, not zero.
+- Establishments: successful authenticated sessions for that relationship in the last
+  60 seconds, including the initial session. This is not TLS 1.3 renegotiation or a
+  count of failed handshakes. Counts are local to the collector and reset on restart.
+
+Metadata hooks receive timestamps/descriptors only, never payloads. The collector
+retains the latest 1,024 records by default and rejects unexpected fields. Missing
+measurements remain `None`; metadata anomalies do not establish that an attack occurred.
+
+Next: PHASE 6 — Signal Normalization.
 
 Implementation references: [Python TLS](https://docs.python.org/3.10/library/ssl.html),
 [accepted-socket TLS](https://docs.python.org/3.10/library/asyncio-eventloop.html#asyncio.loop.connect_accepted_socket),
