@@ -1,7 +1,7 @@
 # Build checkpoint
 
 - Milestone: 2 — phase 5 authorized and completed.
-- Current phase: 9 — Relationship Memory Store (complete).
+- Current phase: 10 — Verification Trigger Engine (complete).
 - Completed phases: 1, 2, 3, 4, 5. No phase-6-or-later implementation.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
@@ -69,7 +69,9 @@
 - Phase 8: independent delta property and sharp-drop check; focused checks: 3 passed.
 - Phase 9: SQLite relationships, sessions, trust/verification/key histories;
   reopen/identity isolation test passed. Metadata only; .state ignored by Git.
-- Next phase: PHASE 10 — Verification Trigger Engine.
+- Phase 10: configurable 80/50/-10 trigger thresholds, explicit decision reasons,
+  new-relationship and failed-verification handling; branch check passed.
+- Next phase: PHASE 11 — Out-of-Band Verification Simulation.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
