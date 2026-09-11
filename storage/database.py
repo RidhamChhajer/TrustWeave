@@ -4,6 +4,10 @@ import sqlite3
 from pathlib import Path
 
 SCHEMA = """
+CREATE TABLE IF NOT EXISTS audit_events (
+ id INTEGER PRIMARY KEY, timestamp TEXT NOT NULL,
+ session_id TEXT NOT NULL REFERENCES sessions(id), relationship_id TEXT NOT NULL,
+ event_type TEXT NOT NULL, metadata TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS relationships (
  id TEXT PRIMARY KEY, trust REAL NOT NULL CHECK(trust BETWEEN 0 AND 100),
  verified INTEGER NOT NULL DEFAULT 0, successes INTEGER NOT NULL DEFAULT 0,

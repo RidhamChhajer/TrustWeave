@@ -47,7 +47,9 @@ class SessionGuard:
                 return decide(self.engine.score, 0, verified=False, restricted=True)
             try:
                 self.last_raw = dict(raw)
-                assessment = self.engine.assess(normalize_snapshot(raw, self.baselines, self.normalization_policy))
+                normalized = normalize_snapshot(raw, self.baselines, self.normalization_policy)
+                self.store.audit(self.context.session_id, "SIGNAL_UPDATED", **normalized)
+                assessment = self.engine.assess(normalized)
                 self.last_assessment = assessment
                 self.store.assessment(self.context.session_id, assessment)
                 decision = decide(assessment.score, assessment.delta, verified=self.verified, policy=self.trigger_policy)
@@ -57,6 +59,8 @@ class SessionGuard:
                     self.connection.require_verification(True)
                     request = VerificationRequest.create(self.context.session_id, self.context.relationship_id, decision.reason)
                     self.pending = request
+                    self.store.audit(self.context.session_id, "VERIFICATION_TRIGGERED", reason=decision.reason,
+                                     score=decision.score, delta=decision.delta, simulated=request.simulated)
                     outcome = await verify(request, self.responder, self.timeout)
                     self.store.verification(request, outcome.value)
                     self.last_outcome = outcome
