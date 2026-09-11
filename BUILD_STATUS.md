@@ -1,7 +1,7 @@
 # Build checkpoint
 
 - Milestone: 2 — phase 5 authorized and completed.
-- Current phase: 11 — Verification Simulation (complete).
+- Current phase: 12 — Live Verification Gate (complete).
 - Completed phases: 1, 2, 3, 4, 5. No phase-6-or-later implementation.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
@@ -73,7 +73,9 @@
   new-relationship and failed-verification handling; branch check passed.
 - Phase 11: identity-pair comparison request, success/failure/cancel/timeout outcomes;
   simulation explicitly labelled; outcome/timeout check passed.
-- Next phase: PHASE 12 — Trigger and Verification Integration.
+- Phase 12: SessionGuard binds EMA/history/trigger to a transport gate; pending
+  verification blocks send/delivery; failure closes session. Live/security checks: 13 passed.
+- Next phase: PHASE 13 — Key Lifecycle Controller.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.

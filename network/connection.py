@@ -59,6 +59,10 @@ class FramedConnection:
         self._receiving = False
         self._closed = False
         self.metrics = metrics
+        self._verification_pending = False
+
+    def require_verification(self, required: bool) -> None:
+        self._verification_pending = required
 
     @property
     def info(self) -> SessionInfo:
@@ -67,6 +71,8 @@ class FramedConnection:
     def _check_open(self) -> None:
         if self._closed:
             raise ConnectionFailure("connection is closed")
+        if self._verification_pending:
+            raise ConnectionFailure("identity verification required")
 
     async def send(self, payload: bytes) -> None:
         self._check_open()
@@ -128,6 +134,7 @@ class FramedConnection:
             raise ConnectionFailure("receive failed") from None
         finally:
             self._receiving = False
+        self._check_open()
         if self.metrics is not None:
             self.metrics.frame("received")
         event("FRAME_RECEIVED", session_id=self.info.session_id, byte_count=len(payload))

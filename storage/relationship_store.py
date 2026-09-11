@@ -57,6 +57,16 @@ class RelationshipStore:
         with self.db:
             self.db.execute("UPDATE sessions SET ended=?,status=? WHERE id=?", (timestamp(), status, session_id))
 
+    def verification(self, request, outcome):
+        if outcome not in {"SUCCESS", "FAILURE", "CANCELLED", "TIMEOUT"}:
+            raise ValueError("invalid verification outcome")
+        success = outcome == "SUCCESS"
+        with self.db:
+            self.db.execute("INSERT INTO verification_events VALUES(?,?,?,?,?)",
+                            (request.id, request.session_id, timestamp(), outcome, int(request.simulated)))
+            self.db.execute("UPDATE relationships SET verified=?,successes=successes+?,failures=failures+?,last_verified=CASE WHEN ? THEN ? ELSE last_verified END WHERE id=(SELECT relationship_id FROM sessions WHERE id=?)",
+                            (int(success), int(success), int(not success), int(success), timestamp(), request.session_id))
+
     def close(self):
         self.db.close()
 
