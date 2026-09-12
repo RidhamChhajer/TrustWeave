@@ -104,6 +104,9 @@ class RelationshipStore:
                    outcome=outcome, simulated=request.simulated)
 
     def key_event(self, session_id, action, key_id):
+        identifier(session_id, 32)
+        if key_id != session_id + ":tls-traffic":
+            raise ValueError("invalid public key epoch identifier")
         if action not in {"KEEP_CURRENT_KEY", "STANDARD_ROTATION", "REESTABLISH_KEY", "RESTRICT_SESSION"}:
             raise ValueError("invalid lifecycle action")
         with self.db:

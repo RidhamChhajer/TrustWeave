@@ -1,8 +1,8 @@
 # Build checkpoint
 
 - Scope: all remaining phases authorized; proceed sequentially with focused checks.
-- Current phase: 26 — Robustness Testing (complete).
-- Completed phases: 1–26.
+- Current phase: 27 — Security Review (complete).
+- Completed phases: 1–27.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
   pytest settings, environment example and ignore rules.
@@ -160,11 +160,16 @@
   exhaustion. Corrected local-event ordering without weakening explicit replay rejection;
   revised fixture to model elapsed time rather than count internal clock calls.
   `.venv/Scripts/python.exe -m pytest -q --show-capture=no`: 68 passed in 5.46s.
-- Next phase: PHASE 27 — Security Review.
+- Phase 27: docs/security-review.md, storage/relationship_store.py, dashboard/app.py,
+  tests/test_audit.py. Tightened public epoch IDs and sanitized HTTP error details.
+  `.venv/Scripts/python.exe -m pytest -q tests/test_audit.py tests/test_dashboard.py tests/test_secure.py --show-capture=no`:
+  15 passed in 1.80s. Source review records cooperative local guard, simulated OOB,
+  legacy runtime, local trusted users, non-tamper-evident audit and no production DoS defenses.
+- Next phase: PHASE 28 — Code Quality Refactor.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing commit `phase-26-robustness`; resolve its
+- Latest Git commit: containing commit `phase-27-security-review`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.

@@ -13,6 +13,8 @@ def test_audit_chronology_and_field_boundary(tmp_path):
         store.audit(sid, "VERIFICATION_TRIGGERED", reason="sudden_drop", score=63, delta=-27, simulated=True)
         with pytest.raises(ValueError):
             store.audit(sid, "TRUST_UPDATED", plaintext="PRIVATE_MARKER")
+        with pytest.raises(ValueError):
+            store.key_event(sid, "KEEP_CURRENT_KEY", "PRIVATE_MARKER")
         store.finish_session(sid, "RESTRICTED")
         store.finish_session(sid)
     with RelationshipStore(path) as store:

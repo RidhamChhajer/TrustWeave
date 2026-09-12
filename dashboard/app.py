@@ -56,8 +56,8 @@ def create_app(database=".state/dashboard.db"):
     async def start(request: Request):
         try:
             await checked(request).begin()
-        except ValueError as exc:
-            raise HTTPException(409, str(exc)) from None
+        except ValueError:
+            raise HTTPException(409, "Session cannot be started in the current state") from None
         return {"ok": True}
 
     @app.post("/api/stop")
@@ -72,9 +72,12 @@ def create_app(database=".state/dashboard.db"):
         if lock.locked():
             raise HTTPException(409, "An experiment is already running")
         async with lock:
-            result = await run_trace(trace())
-            validate(result)
-            save(result, "artifacts/dashboard-sudden.json")
+            try:
+                result = await run_trace(trace())
+                validate(result)
+                save(result, "artifacts/dashboard-sudden.json")
+            except Exception:
+                raise HTTPException(500, "Experiment failed safely") from None
             return {"simulated_metadata": True, "simulated_oob": True,
                     "transport": result["transport"], "rows": result["rows"]}
 
@@ -82,8 +85,8 @@ def create_app(database=".state/dashboard.db"):
     async def verification(request: Request, answer: Answer):
         try:
             checked(request).resolve(answer.request_id, answer.outcome)
-        except ValueError as exc:
-            raise HTTPException(409, str(exc)) from None
+        except ValueError:
+            raise HTTPException(409, "Verification request is no longer pending") from None
         return {"ok": True}
 
     return app
