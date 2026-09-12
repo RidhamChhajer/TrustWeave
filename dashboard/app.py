@@ -1,6 +1,7 @@
 """Serve on loopback only: python -m dashboard.app."""
 
 from contextlib import asynccontextmanager
+import asyncio
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
@@ -10,6 +11,8 @@ from pydantic import BaseModel
 
 from dashboard.runtime import Runtime
 from verification.verification import Outcome
+from experiments.runner import run_trace, save
+from experiments.sudden import trace, validate
 
 
 class Answer(BaseModel):
@@ -23,6 +26,7 @@ def create_app(database=".state/dashboard.db"):
         runtime = Runtime(database)
         await runtime.start()
         app.state.runtime = runtime
+        app.state.experiment_lock = asyncio.Lock()
         try:
             yield
         finally:
@@ -44,6 +48,10 @@ def create_app(database=".state/dashboard.db"):
     async def state():
         return app.state.runtime.snapshot()
 
+    @app.get("/experiment.js")
+    async def experiment_script():
+        return FileResponse(Path(__file__).parent / "experiment.js", media_type="text/javascript")
+
     @app.post("/api/start")
     async def start(request: Request):
         try:
@@ -56,6 +64,19 @@ def create_app(database=".state/dashboard.db"):
     async def stop(request: Request):
         await checked(request).stop()
         return {"ok": True}
+
+    @app.post("/api/experiment/sudden")
+    async def sudden(request: Request):
+        checked(request)
+        lock = app.state.experiment_lock
+        if lock.locked():
+            raise HTTPException(409, "An experiment is already running")
+        async with lock:
+            result = await run_trace(trace())
+            validate(result)
+            save(result, "artifacts/dashboard-sudden.json")
+            return {"simulated_metadata": True, "simulated_oob": True,
+                    "transport": result["transport"], "rows": result["rows"]}
 
     @app.post("/api/verify")
     async def verification(request: Request, answer: Answer):

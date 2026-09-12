@@ -1,8 +1,8 @@
 # Build checkpoint
 
 - Scope: all remaining phases authorized; proceed sequentially with focused checks.
-- Current phase: 19 — Gradual Degradation (complete).
-- Completed phases: 1–19.
+- Current phase: 20 — Sudden Trust Drop (complete).
+- Completed phases: 1–20.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
   pytest settings, environment example and ignore rules.
@@ -107,11 +107,21 @@
   delta -3.8516: absolute low threshold, not sudden-drop trigger.
   13 total verifications: bootstrap plus repeated prompts while abnormal inputs persist.
   Successful verification's trust floor does not remove the abnormal condition; no bypass cooldown.
-- Next phase: PHASE 20 — Experiment 3: Sudden Trust Drop.
+- Phase 20: experiments/sudden.py, dashboard/app.py, index.html, experiment.js,
+  tests/test_dashboard.py. Separate labelled dashboard experiment preserves live data.
+  `.venv/Scripts/python.exe -m experiments.sudden`: acceptance passed, 19 observations,
+  2 verifications; anomaly 99.5057 -> 69.6540, delta -29.8517, immediate trigger above 50;
+  successful MATCH caused fresh TLS epoch; recovery reached 97.058775.
+  Raw data: artifacts/sudden.json; dashboard runs save artifacts/dashboard-sudden.json.
+  `.venv/Scripts/python.exe -m pytest -q tests/test_dashboard.py`: 2 passed in 1.18s,
+  including ASGI endpoint and cross-origin rejection. Browser rendering not inspected.
+- User renamed .env.example to .env; preserve ignored .env without reading/logging it.
+  The tracked .env.example deletion is a user change, excluded from phase commits.
+- Next phase: PHASE 21 — Experiment 4: New Relationship.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing commit `phase-19-experiment-gradual`; resolve its
+- Latest Git commit: containing commit `phase-20-experiment-sudden`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.
