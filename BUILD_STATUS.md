@@ -1,8 +1,8 @@
 # Build checkpoint
 
 - Scope: all remaining phases authorized; proceed sequentially with focused checks.
-- Current phase: 23 — Verification Failure (complete).
-- Completed phases: 1–23.
+- Current phase: 24 — Quantitative Evaluation (complete).
+- Completed phases: 1–24.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
   pytest settings, environment example and ignore rules.
@@ -136,11 +136,20 @@
   14 observations, 3 verifications; failure/restriction retained in ordered audit.
   `.venv/Scripts/python.exe -m pytest -q tests/test_guard.py`: 1 passed in 0.14s.
   Raw data: artifacts/failure.json. Recovery requires a new connection, not reopening a failed one.
-- Next phase: PHASE 24 — Quantitative Evaluation.
+- Phase 24: experiments/evaluation.py, tests/test_evaluation.py, docs/evaluation.md.
+  `.venv/Scripts/python.exe -m pytest -q tests/test_evaluation.py`: 1 passed in 0.10s.
+  `.venv/Scripts/python.exe -m experiments.evaluation`: six real-TLS/synthetic-context
+  scenarios saved under artifacts/evaluation with raw traces and summary.json.
+  Verification counts normal/gradual/sudden/new/established/failure: 1/13/2/2/2/3.
+  Zero unnecessary requests on wholly normal observed sessions under these inputs.
+  Four injected episodes triggered; gradual delay 18 observations, abrupt cases 0.
+  Sudden dispatch latency 5.2486ms this run; automatic responses are not human OOB latency.
+  Definitions include actual TLS-epoch denominators and exclude required bootstrap from false requests.
+- Next phase: PHASE 25 — Threshold and Sensitivity Analysis.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing commit `phase-23-experiment-failure`; resolve its
+- Latest Git commit: containing commit `phase-24-quantitative-evaluation`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.
