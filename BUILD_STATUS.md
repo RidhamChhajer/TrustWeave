@@ -1,7 +1,7 @@
 # Build checkpoint
 
 - Scope: all remaining phases authorized; proceed sequentially with focused checks.
-- Current phase: 29 — Documentation (complete).
+- Current phase: 30 — Reproducibility Check (externally blocked; incomplete).
 - Completed phases: 1–29.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
@@ -175,11 +175,26 @@
   database schema, measured results, metric definitions, configuration and security boundaries.
   Removed stale foundation-only claims. Explicitly documents that .env is not auto-loaded.
   `git diff --check` passed; commands align with implemented module entry points.
-- Next phase: PHASE 30 — Reproducibility Check.
+- Phase 30 attempt: clean `git clone --no-local` at artifacts/repro, new `.venv`
+  created there, `python -m pip install -r requirements.txt` installed all pins.
+  `python -m pip check`: no broken requirements. No .env/credentials/database copied.
+  Fresh clone commands `python -m pytest -q --show-capture=no`, `python -m client.demo`
+  and `python -m experiments.sudden` failed importing cryptography's _rust.pyd:
+  "An Application Control policy has blocked this file." This persists with approved
+  execution outside the sandbox. No OS security policy was changed or bypassed.
+  SHA256 of both existing/fresh _rust.pyd is identical:
+  6C69EB01DEED404F8D16F4F23B176A1080745EA4B1C2DFD4C64E874E93782BF4.
+  Existing environment regression still passes: `.venv/Scripts/python.exe -m pytest -q
+  --show-capture=no`: 68 passed in 4.52s. Fresh-environment runtime validation is NOT passed.
+  Blocker: Windows must permit the freshly installed native module through an authorized
+  administrator-approved process, or reproduction must run on a permitted clean machine.
+  Reproduction directory is retained (ignored by Git). Do not substitute the old environment
+  and label that a clean reproduction. No Phase 31 implementation started.
+- Next action: resume PHASE 30 in an authorized environment; then PHASE 31 final demo.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing commit `phase-29-documentation`; resolve its
+- Latest Git commit: containing checkpoint commit `checkpoint-phase-30-policy-blocker`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.
