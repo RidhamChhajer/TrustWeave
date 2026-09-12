@@ -1,8 +1,10 @@
 # Build checkpoint
 
 - Scope: all remaining phases authorized; proceed sequentially with focused checks.
-- Current phase: 30 — Reproducibility Check (externally blocked; incomplete).
-- Completed phases: 1–29.
+- Current phase: 31 — Final End-to-End Demo (complete in existing environment).
+- Completed phases: 1–29 and 31. Phase 30 remains externally blocked/incomplete.
+- User explicitly authorized completing the remaining demo in the working environment
+  while preserving the Phase 30 blocker. This is not full clean-environment sign-off.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
   pytest settings, environment example and ignore rules.
@@ -189,16 +191,26 @@
   Blocker: Windows must permit the freshly installed native module through an authorized
   administrator-approved process, or reproduction must run on a permitted clean machine.
   Reproduction directory is retained (ignored by Git). Do not substitute the old environment
-  and label that a clean reproduction. No Phase 31 implementation started.
-- Next action: resume PHASE 30 in an authorized environment; then PHASE 31 final demo.
+  and label that a clean reproduction. Phase 31 subsequently completed by user authorization.
+- Next action: resolve Windows policy and complete PHASE 30; no further coding phase remains.
 - Follow-up: user authorized system diagnosis; computer-use instructions read and runtime
   initialized. Skill prohibits security UI/settings automation. Read-only CodeIntegrity
   events 3077/3033 confirm policy {0283ac0f-fff1-49ae-ada1-8a933130cad6} blocks fresh
   _rust.pyd; approved import retry still failed. No security settings changed.
+- Phase 31: client/final_demo.py, README.md, docs/reproducibility.md and this checkpoint.
+  `.venv/Scripts/python.exe -m client.final_demo`: FINAL_DEMO_SUCCESS; 10 acceptance
+  checks passed; 27 observations, 4 verifications, final trust 97.058775.
+  Demonstrates conservative bootstrap/MATCH/learning/sudden anomaly/MISMATCH with actual
+  send rejection/fresh recovery/repeat anomaly MATCH/new TLS epoch/restored messaging.
+  Raw metadata, decisions and audit saved in artifacts/final-demo.json; no payloads/secrets.
+  `.venv/Scripts/python.exe -m pytest -q --show-capture=no`: 68 passed in 4.36s.
+  Browser check on 127.0.0.1:8767: rendered layout, isolated sudden experiment result,
+  live pending comparison, MATCH -> fresh session -> rising graph -> Stop/Idle verified.
+  Local dashboard process started for handoff on port 8767; live messaging stopped.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing checkpoint commit `checkpoint-phase-30-policy-diagnosis`; resolve its
+- Latest Git commit: containing commit `phase-31-final-demo`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.

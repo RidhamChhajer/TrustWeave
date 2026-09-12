@@ -9,7 +9,8 @@ The fresh interpreter cannot import cryptography's `_rust.pyd`: Windows reports
 sandbox did not resolve it. The existing and fresh DLL SHA-256 hashes are identical:
 `6C69EB01DEED404F8D16F4F23B176A1080745EA4B1C2DFD4C64E874E93782BF4`.
 The existing environment still passes 68 tests. This does **not** establish clean-machine
-reproducibility; Phase 30 remains incomplete and Phase 31 has not started.
+reproducibility; Phase 30 remains incomplete. Phase 31 was subsequently completed in
+the existing environment with explicit user authorization, without clearing this blocker.
 
 Follow-up diagnosis: read-only CodeIntegrity/Operational inspection confirms events
 3077 and 3033 naming the fresh `_rust.pyd` and blocking policy
@@ -31,6 +32,8 @@ Do not disable or bypass Application Control. Once permitted, from the clean clo
 .\.venv\Scripts\python.exe -m dashboard.app
 ```
 
-Confirm dashboard access and the isolated sudden-drop control in a browser; existing
-ASGI endpoint tests do not substitute for visual rendering validation. Then complete
-Phase 31's combined new relationship/MATCH/learning/anomaly/MISMATCH/recovery demo.
+Confirm dashboard access and the isolated sudden-drop control in the clean environment.
+The existing environment's browser rendering and live MATCH/graph/Stop flow have now
+been inspected successfully. `python -m client.final_demo` passes all ten combined
+acceptance checks there; repeat it after Phase 30's environment approval. Its raw result
+is artifacts/final-demo.json. Existing-environment final regression: 68 passed in 4.36s.

@@ -20,12 +20,16 @@ It does not replace live observations with simulated data.
 
 ```powershell
 .\.venv\Scripts\python.exe -m client.adaptive_demo
+.\.venv\Scripts\python.exe -m client.final_demo
 .\.venv\Scripts\python.exe -m experiments.sudden
 .\.venv\Scripts\python.exe -m experiments.evaluation
 .\.venv\Scripts\python.exe -m experiments.sensitivity
 ```
 
 Evaluation runs all six scenarios; sensitivity saves a 33-run CSV comparison.
+`client.final_demo` combines bootstrap, learning, sudden anomaly, MISMATCH blocking,
+fresh recovery, repeat-anomaly MATCH and renewed encrypted messaging. Phase 30 clean
+environment validation remains blocked by Windows policy; see docs/reproducibility.md.
 Outputs under `artifacts/` and metadata databases under `.state/` are local and ignored
 by Git. Dashboard identities are temporary per process; CLI-provisioned identities persist.
 See [architecture](docs/architecture.md), [algorithms](docs/algorithms.md),
