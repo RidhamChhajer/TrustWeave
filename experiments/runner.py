@@ -1,7 +1,8 @@
 """Real loopback TLS with reproducible simulated metadata and OOB decisions."""
 
 import asyncio
-from dataclasses import asdict
+from dataclasses import asdict, replace
+from contextlib import AsyncExitStack
 import json
 from pathlib import Path
 import secrets
@@ -10,7 +11,8 @@ from time import perf_counter_ns
 
 from client.bob import echo
 from config.settings import Settings
-from crypto.identity import provision
+from crypto.identity import provision, fingerprint
+from cryptography import x509
 from network.secure import SecureServer, connect
 from storage.relationship_store import RelationshipStore
 from trust.trust_engine import TrustPolicy
@@ -22,13 +24,22 @@ from verification.verification import Outcome
 async def run_trace(trace, *, trust_policy=TrustPolicy(), trigger_policy=TriggerPolicy()):
     """Trace entries: kind, raw, anomaly, optional outcome/new_session. No score overrides."""
     rows = []
+    trace = list(trace)
+    peers = tuple(dict.fromkeys(["bob"] + [entry.get("peer", "bob") for entry in trace]))
     with tempfile.TemporaryDirectory(prefix="trust-experiment-") as temporary:
-        passwords = {role: secrets.token_urlsafe(32).encode() for role in ("ca", "alice", "bob")}
-        credentials = provision(Path(temporary) / "identities", passwords)
+        passwords = {role: secrets.token_urlsafe(32).encode() for role in ("ca", "alice", *peers)}
+        credentials = provision(Path(temporary) / "identities", passwords, server_names=peers)
         with RelationshipStore(Path(temporary) / "history.db") as store:
-            async with await SecureServer.start(Settings(port=0), credentials["bob"], lambda: passwords["bob"], echo) as server:
+            async with AsyncExitStack() as stack:
+                servers, clients = {}, {}
+                for peer in peers:
+                    servers[peer] = await stack.enter_async_context(await SecureServer.start(
+                        Settings(port=0), credentials[peer], lambda peer=peer: passwords[peer], echo))
+                    clients[peer] = replace(credentials["alice"], expected_peer_pin=fingerprint(
+                        x509.load_pem_x509_certificate(credentials[peer].certificate.read_bytes())))
+                active_peer = "bob"
                 async def reconnect():
-                    return await connect(Settings(port=server.port), credentials["alice"], lambda: passwords["alice"])
+                    return await connect(Settings(port=servers[active_peer].port), clients[active_peer], lambda: passwords["alice"])
                 entry = {}
                 trigger_ns = None
                 async def response(request):
@@ -41,12 +52,15 @@ async def run_trace(trace, *, trust_policy=TrustPolicy(), trigger_policy=Trigger
                 guard = wrap(await reconnect())
                 try:
                     for tick, entry in enumerate(trace):
-                        if entry.get("new_session"):
+                        requested_peer = entry.get("peer", "bob")
+                        if entry.get("new_session") or requested_peer != active_peer:
                             await guard.close()
+                            active_peer = requested_peer
                             guard = wrap(await reconnect())
                         if guard.restricted:
                             break
                         sid = guard.context.session_id
+                        relationship_id = guard.context.relationship_id
                         before = guard.engine.score
                         trigger_ns = None
                         injection_ns = perf_counter_ns()
@@ -60,6 +74,7 @@ async def run_trace(trace, *, trust_policy=TrustPolicy(), trigger_policy=Trigger
                             if not delivered:
                                 raise RuntimeError("encrypted exchange failed")
                         rows.append(dict(tick=tick, kind=entry["kind"], anomaly=entry["anomaly"],
+                                         peer=active_peer, relationship_id=relationship_id,
                                          raw=entry["raw"], session_id=sid, resulting_session_id=guard.context.session_id,
                                          before=before, score=decision.score, after=guard.engine.score,
                                          delta=decision.delta, action=decision.action, reason=decision.reason,

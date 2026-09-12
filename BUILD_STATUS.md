@@ -1,8 +1,8 @@
 # Build checkpoint
 
 - Scope: all remaining phases authorized; proceed sequentially with focused checks.
-- Current phase: 20 — Sudden Trust Drop (complete).
-- Completed phases: 1–20.
+- Current phase: 21 — New Relationship (complete).
+- Completed phases: 1–21.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
   pytest settings, environment example and ignore rules.
@@ -117,11 +117,18 @@
   including ASGI endpoint and cross-origin rejection. Browser rendering not inspected.
 - User renamed .env.example to .env; preserve ignored .env without reading/logging it.
   The tracked .env.example deletion is a user change, excluded from phase commits.
-- Next phase: PHASE 21 — Experiment 4: New Relationship.
+- Phase 21: crypto/identity.py permits explicit Bob/Charlie development certificates;
+  experiments/runner.py supports separate pinned peers using the same Alice identity/store;
+  experiments/new_relationship.py saves artifacts/new-relationship.json.
+  `.venv/Scripts/python.exe -m experiments.new_relationship`: acceptance passed;
+  20 observations, 2 bootstrap verifications; Charlie initial 45, final 97.9411425.
+  `.venv/Scripts/python.exe -m pytest -q tests/test_crypto.py tests/test_experiments.py`:
+  10 passed in 0.30s. Bob trust is not inherited by Charlie.
+- Next phase: PHASE 22 — Experiment 5: Established Relationship.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing commit `phase-20-experiment-sudden`; resolve its
+- Latest Git commit: containing commit `phase-21-experiment-new-relationship`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.

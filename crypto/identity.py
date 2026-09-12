@@ -55,14 +55,17 @@ def _private_bytes(key: ec.EllipticCurvePrivateKey, password: bytes) -> bytes:
                              serialization.BestAvailableEncryption(password))
 
 
-def provision(directory: Path, passwords: dict[str, bytes]) -> dict[str, Credentials]:
+def provision(directory: Path, passwords: dict[str, bytes], *, server_names=("bob",)) -> dict[str, Credentials]:
     """Create a new demo CA and endpoint folders. Never overwrite existing data.
 
     This is trusted, single-machine bootstrap, not identity verification over a network.
     The caller supplies separate passwords for ca, alice and bob without logging them.
     """
+    if not server_names or len(set(server_names)) != len(server_names) or any(role not in {"bob", "charlie"} for role in server_names):
+        raise ValueError("invalid development server names")
+    roles = ("alice", *server_names)
     if any(not isinstance(passwords.get(role), bytes) or len(passwords[role]) < 12
-           for role in ("ca", "alice", "bob")):
+           for role in ("ca", *roles)):
         raise ValueError("each role needs a password of at least 12 bytes")
     directory.mkdir(parents=True, exist_ok=False)
     now = datetime.now(timezone.utc)
@@ -79,13 +82,13 @@ def provision(directory: Path, passwords: dict[str, bytes]) -> dict[str, Credent
     _write_new(directory / "ca.pem", ca_pem)
     _write_new(directory / "ca.key", _private_bytes(ca_key, passwords["ca"]))
     pins = {}
-    for role in ("alice", "bob"):
+    for role in roles:
         endpoint = directory / role
         endpoint.mkdir()
         key = ec.generate_private_key(ec.SECP256R1())
         subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, role)])
         names = [x509.DNSName(role + ".local")]
-        if role == "bob":
+        if role != "alice":
             names.extend([x509.DNSName("localhost"), x509.IPAddress(ipaddress.ip_address("127.0.0.1"))])
         usage = ExtendedKeyUsageOID.CLIENT_AUTH if role == "alice" else ExtendedKeyUsageOID.SERVER_AUTH
         cert = (x509.CertificateBuilder().subject_name(subject).issuer_name(ca.subject)
@@ -102,6 +105,6 @@ def provision(directory: Path, passwords: dict[str, bytes]) -> dict[str, Credent
         _write_new(endpoint / "identity.key", _private_bytes(key, passwords[role]))
         _write_new(endpoint / "ca.pem", ca_pem)
         pins[role] = fingerprint(cert)
-    for role, peer in (("alice", "bob"), ("bob", "alice")):
+    for role, peer in (("alice", server_names[0]), *((name, "alice") for name in server_names)):
         _write_new(directory / role / "peer.sha256", (pins[peer] + "\n").encode("ascii"))
-    return {role: Credentials.from_directory(directory / role) for role in ("alice", "bob")}
+    return {role: Credentials.from_directory(directory / role) for role in roles}
