@@ -14,6 +14,7 @@ from config.settings import Settings
 from crypto.identity import provision, fingerprint
 from cryptography import x509
 from network.secure import SecureServer, connect
+from network.connection import ConnectionFailure
 from storage.relationship_store import RelationshipStore
 from trust.trust_engine import TrustPolicy
 from verification.session_guard import SessionGuard
@@ -67,6 +68,14 @@ async def run_trace(trace, *, trust_policy=TrustPolicy(), trigger_policy=Trigger
                         decision = await guard.assess(entry["raw"])
                         assessed_ns = perf_counter_ns()
                         delivered = False
+                        blocked = False
+                        if guard.restricted:
+                            try:
+                                await guard.connection.send(secrets.token_bytes(32))
+                            except ConnectionFailure:
+                                blocked = True
+                            else:
+                                raise RuntimeError("restricted session accepted a send")
                         if not guard.restricted:
                             payload = secrets.token_bytes(32)
                             await guard.connection.send(payload)
@@ -79,7 +88,7 @@ async def run_trace(trace, *, trust_policy=TrustPolicy(), trigger_policy=Trigger
                                          before=before, score=decision.score, after=guard.engine.score,
                                          delta=decision.delta, action=decision.action, reason=decision.reason,
                                          outcome=guard.last_outcome.value if decision.requires_verification else None,
-                                         restricted=guard.restricted, delivered=delivered,
+                                         restricted=guard.restricted, delivered=delivered, blocked_send=blocked,
                                          key_action=guard.last_key_action if not guard.restricted else "RESTRICT_SESSION",
                                          injection_ns=injection_ns, trigger_ns=trigger_ns,
                                          assessment_ms=(assessed_ns-injection_ns)/1e6,

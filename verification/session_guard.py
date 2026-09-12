@@ -98,6 +98,7 @@ class SessionGuard:
 
     async def restrict(self):
         self.restricted = True
+        self.last_key_action = "RESTRICT_SESSION"
         self.verified = False
         self.pending = None
         self.connection.require_verification(True)

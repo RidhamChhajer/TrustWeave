@@ -1,8 +1,8 @@
 # Build checkpoint
 
 - Scope: all remaining phases authorized; proceed sequentially with focused checks.
-- Current phase: 22 — Established Relationship (complete).
-- Completed phases: 1–22.
+- Current phase: 23 — Verification Failure (complete).
+- Completed phases: 1–23.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
   pytest settings, environment example and ignore rules.
@@ -129,11 +129,18 @@
   equal eight-observation windows: cold 1 required verification, established 0;
   established scores start above 95; independent sudden-drop protection still triggers.
   This measures bootstrap avoidance, not a claim of improved real-world attack detection.
-- Next phase: PHASE 23 — Experiment 6: Verification Failure.
+- Phase 23: experiments/failure.py, runner.py and verification/session_guard.py.
+  Restriction now also updates the displayed lifecycle state (previously stale).
+  `.venv/Scripts/python.exe -m experiments.failure`: acceptance passed; real send
+  rejected after MISMATCH; same relationship recovers with MATCH and a fresh TLS epoch.
+  14 observations, 3 verifications; failure/restriction retained in ordered audit.
+  `.venv/Scripts/python.exe -m pytest -q tests/test_guard.py`: 1 passed in 0.14s.
+  Raw data: artifacts/failure.json. Recovery requires a new connection, not reopening a failed one.
+- Next phase: PHASE 24 — Quantitative Evaluation.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing commit `phase-22-experiment-established`; resolve its
+- Latest Git commit: containing commit `phase-23-experiment-failure`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.
