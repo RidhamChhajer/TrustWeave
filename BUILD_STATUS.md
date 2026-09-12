@@ -1,8 +1,8 @@
 # Build checkpoint
 
 - Scope: all remaining phases authorized; proceed sequentially with focused checks.
-- Current phase: 28 — Code Quality (complete).
-- Completed phases: 1–28.
+- Current phase: 29 — Documentation (complete).
+- Completed phases: 1–29.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
   pytest settings, environment example and ignore rules.
@@ -170,11 +170,16 @@
   handshake comment. Updated collector, snapshot, dashboard, crypto docs and demos.
   `.venv/Scripts/python.exe -m pytest -q tests/test_trust.py tests/test_robustness.py tests/test_dashboard.py --show-capture=no`:
   7 passed in 1.26s. `python -m pip check`: no broken requirements.
-- Next phase: PHASE 29 — Documentation.
+- Phase 29: refreshed README.md and docs/algorithms.md; added architecture.md,
+  experiments.md and presentation.md. Includes run instructions, network/state diagrams,
+  database schema, measured results, metric definitions, configuration and security boundaries.
+  Removed stale foundation-only claims. Explicitly documents that .env is not auto-loaded.
+  `git diff --check` passed; commands align with implemented module entry points.
+- Next phase: PHASE 30 — Reproducibility Check.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing commit `phase-28-code-quality`; resolve its
+- Latest Git commit: containing commit `phase-29-documentation`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.

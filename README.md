@@ -1,8 +1,36 @@
 # Adaptive Trust-Triggered Cryptographic Verification
 
-Experimental Computer Network Technology project. The three original specifications
-define the later adaptive verification layer. This milestone implements phases 1–4
-foundation is complete. Phase 5 now adds raw metadata collection above that transport.
+Experimental Computer Network Technology project implementing authenticated TLS messaging,
+metadata-based EMA trust, independent sudden-drop triggers, persistent relationship history,
+simulated out-of-band verification, fresh-session key lifecycle and an observable dashboard.
+The original three specifications are preserved; see BUILD_STATUS.md for exact progress.
+
+## Start here
+
+After installing dependencies below:
+
+```powershell
+.\.venv\Scripts\python.exe -m dashboard.app
+```
+
+Open http://127.0.0.1:8766. Start a live session, resolve the explicitly simulated
+fingerprint comparison, and observe metadata/trust. The separate **Run sudden-drop
+experiment** button shows a complete, automatically verified controlled experiment.
+It does not replace live observations with simulated data.
+
+```powershell
+.\.venv\Scripts\python.exe -m client.adaptive_demo
+.\.venv\Scripts\python.exe -m experiments.sudden
+.\.venv\Scripts\python.exe -m experiments.evaluation
+.\.venv\Scripts\python.exe -m experiments.sensitivity
+```
+
+Evaluation runs all six scenarios; sensitivity saves a 33-run CSV comparison.
+Outputs under `artifacts/` and metadata databases under `.state/` are local and ignored
+by Git. Dashboard identities are temporary per process; CLI-provisioned identities persist.
+See [architecture](docs/architecture.md), [algorithms](docs/algorithms.md),
+[experiments/results](docs/experiments.md), [metric definitions](docs/evaluation.md),
+[security review](docs/security-review.md), and [presentation outline](docs/presentation.md).
 
 ## Development setup (PowerShell)
 
@@ -17,13 +45,16 @@ Use Python 3.10 or newer with TLS 1.3 support. The currently available local run
 is Python 3.10.11 with OpenSSL 1.1.1t; it is old and is used only for local experimental
 validation. Use a maintained, patched Python/OpenSSL runtime before network deployment.
 
-Configuration comes from shell environment variables documented in `.env.example`.
-No `.env` file is loaded implicitly. Never put secrets in configuration or source.
-FastAPI and Uvicorn are installed as specified, but no API/dashboard is implemented.
+Configuration comes from shell environment variables: TRUST_HOST (127.0.0.1), TRUST_PORT
+(8765), TRUST_MAX_FRAME (1048576), TRUST_CONNECT_TIMEOUT (10), TRUST_IO_TIMEOUT (30),
+TRUST_CLOSE_TIMEOUT (3). For example, `$env:TRUST_PORT = '9000'` in PowerShell.
+No `.env` file is loaded implicitly: renaming an example to `.env` alone does not apply
+settings. Keep `.env` private and ignored. Never put secrets in configuration or source.
+FastAPI/Uvicorn serve the local dashboard; policy dataclasses configure scoring and triggers.
 
 See `BUILD_STATUS.md` for phase checkpoints and exact test evidence.
 
-## Run the completed milestone
+## Run the standalone TLS foundation
 
 For a noninteractive demonstration with temporary, freshly generated encrypted
 credentials and real loopback TCP sockets:
@@ -75,7 +106,7 @@ Both objects support asynchronous context managers. Bob's handler implements an 
 
 `info` exposes session ID, connection state, public peer fingerprint, TLS version and
 cipher. Alice's elapsed time includes connection, TLS and encrypted session-ID receipt;
-Bob's elapsed time is `None` because asyncio supplies the accepted stream after TLS.
+Bob's public elapsed field is `None`; its separate metadata includes measured handshake time.
 `key_id` is a non-secret connection-epoch label for TLS traffic keys, not an actual key,
 an exported TLS identifier, or a cryptographic fingerprint. A reconnect gets a fresh ID.
 
@@ -86,9 +117,10 @@ are rejected, sends are serialized, and cleanup has a bounded per-writer deadlin
 Bob owns accepted sockets before TLS starts, so shutdown cancels incomplete handshakes
 as well as established sessions. Application handlers must cooperate with cancellation.
 
-The metadata object and event logger never receive message bodies. The framing layer
-necessarily handles bytes at the endpoints; future trust modules must consume metadata
-only. No trust scoring or verification trigger is implemented yet.
+The metadata object, trust modules and event logger never receive message bodies.
+The framing/application layer necessarily handles bytes at the endpoints. `SessionGuard`
+adds adaptive policy above the secure connection; the standalone Alice/Bob TLS CLIs
+intentionally demonstrate transport only. Use the dashboard/adaptive demo for policy integration.
 
 ## Cryptographic foundation
 
@@ -127,11 +159,12 @@ directory securely; never distribute the CA private key or the other endpoint's 
 Protect public trust/pin files and encrypted key files with OS access controls. Default
 Bob certificates cover localhost, 127.0.0.1 and bob.local; other names need properly
 provisioned certificates. Do not disable hostname validation to bypass this requirement.
-Identity certificates expire after 30 days; this milestone does not renew them, revoke
-them, rotate keys adaptively, or implement human out-of-band verification. Python cannot
+Identity certificates expire after 30 days; the prototype does not renew or revoke
+them. Adaptive traffic-key renewal uses fresh TLS sessions, not identity-key replacement.
+Human out-of-band verification remains simulated. Python cannot
 guarantee wiping all secret bytes from memory. Endpoint/OS compromise is outside scope.
 
-## Phase 5 — Raw metadata
+## Raw metadata
 
 Each secure connection exposes `connection.metrics`. Read
 `connection.metrics.collector.measurements` for its bounded in-memory signal stream.
@@ -140,7 +173,8 @@ reconnects in the same process; Bob shares one collector across its connections.
 
 Records contain UTC timestamp, session ID, a symmetric SHA-256 relationship ID derived
 from both public identity fingerprints, signal name, raw value, source and
-`normalized_value=None`. There is no normalization, scoring or database yet.
+`normalized_value=None`. Normalization is separate from the raw collector; SQLite stores
+relationships, sessions, trust history, verification/key events and ordered audit records.
 
 - Handshake latency: Alice measures TCP + TLS connection time (before reading the
   session ID); Bob measures its accepted-socket TLS handshake. Sources distinguish them.
@@ -160,7 +194,9 @@ Metadata hooks receive timestamps/descriptors only, never payloads. The collecto
 retains the latest 1,024 records by default and rejects unexpected fields. Missing
 measurements remain `None`; metadata anomalies do not establish that an attack occurred.
 
-Next: PHASE 6 — Signal Normalization.
+Dynamic metadata expires after 30 seconds. Explicit stale/duplicate/out-of-order observations
+are rejected within retained collector history. Persisted baselines use only authenticated
+peer IP updates after successful simulated verification; numerical defaults are not auto-trained.
 
 Implementation references: [Python TLS](https://docs.python.org/3.10/library/ssl.html),
 [accepted-socket TLS](https://docs.python.org/3.10/library/asyncio-eventloop.html#asyncio.loop.connect_accepted_socket),
