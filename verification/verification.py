@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from enum import Enum
 import uuid
+import math
 
 
 class Outcome(str, Enum):
@@ -29,7 +30,7 @@ class VerificationRequest:
 
 
 async def verify(request, responder, timeout=30.0):
-    if timeout <= 0:
+    if not math.isfinite(timeout) or timeout <= 0:
         raise ValueError("verification timeout must be positive")
     try:
         result = await asyncio.wait_for(responder(request), timeout)

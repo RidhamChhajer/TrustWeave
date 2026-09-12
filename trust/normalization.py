@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import math
+import ipaddress
 
 
 @dataclass(frozen=True)
@@ -11,6 +12,13 @@ class Baselines:
     variation_ms: float = 10.0
     timing_ms: float = 100.0
     peer_ip: str | None = None
+
+    def __post_init__(self):
+        if any(type(v) not in (int, float) or not math.isfinite(v) or v <= 0
+               for v in (self.handshake_ms, self.rtt_ms, self.variation_ms, self.timing_ms)):
+            raise ValueError("baselines must be positive finite numbers")
+        if self.peer_ip is not None:
+            ipaddress.ip_address(self.peer_ip)
 
 
 @dataclass(frozen=True)
@@ -77,6 +85,18 @@ def normalize_renegotiation(count, policy=NormalizationPolicy()):
 
 def normalize_snapshot(raw, baselines=Baselines(), policy=NormalizationPolicy()):
     """Five fixed inputs; absent fields remain visible through the missing policy."""
+    numeric = {"handshake_ms", "rtt_ms", "variation_ms", "timing_ms", "establishments"}
+    if type(raw) is not dict or set(raw) - numeric - {"peer_ip"}:
+        raise ValueError("unknown metadata fields")
+    for key, value in raw.items():
+        if value is None:
+            continue
+        if key == "peer_ip":
+            if not isinstance(value, str):
+                raise ValueError("IP metadata must be text")
+            ipaddress.ip_address(value)
+        elif type(value) not in (int, float) or not math.isfinite(value) or value < 0:
+            raise ValueError("invalid raw measurement")
     return {
         "handshake": normalize_handshake_latency(raw.get("handshake_ms"), baselines.handshake_ms, policy),
         "rtt": normalize_rtt(raw.get("rtt_ms"), raw.get("variation_ms"), baselines, policy),

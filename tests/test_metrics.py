@@ -14,8 +14,8 @@ from trust.signal_collector import ContextSignalCollector
 
 
 def test_raw_measurements_missing_values_and_rolling_window(monkeypatch):
-    clock = iter((0, 1, 61))
-    monkeypatch.setattr("trust.signal_collector.monotonic", lambda: next(clock))
+    clock = [0]
+    monkeypatch.setattr("trust.signal_collector.monotonic", lambda: clock[0])
     session = SessionContext.create("1" * 32, "a" * 64, "b" * 64, "127.0.0.1")
     reverse = SessionContext.create("2" * 32, "b" * 64, "a" * 64, "127.0.0.1")
     assert session.relationship_id == reverse.relationship_id
@@ -30,8 +30,10 @@ def test_raw_measurements_missing_values_and_rolling_window(monkeypatch):
     assert collector.measurements[-1].raw_value["interval_ms"] is None
     metrics.frame("sent")
     assert collector.measurements[-1].raw_value["interval_ms"] >= 0
+    clock[0] = 1
     collector.session_started(reverse)
     assert collector.measurements[-2].raw_value["count"] == 2
+    clock[0] = 61
     collector.session_started(reverse)
     assert collector.measurements[-2].raw_value["count"] == 1
     for item in collector.measurements:

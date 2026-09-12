@@ -1,10 +1,13 @@
 """Latest current-session metadata, with no message access."""
+from time import monotonic
 
 
 def raw_snapshot(connection):
     result = {}
     for record in connection.metrics.collector.measurements:
         if record.session_id != connection.info.session_id or record.raw_value is None:
+            continue
+        if record.signal_name in {"rtt", "communication_timing", "session_establishments"} and monotonic() - record.observed_at > 30:
             continue
         value = record.raw_value
         if record.signal_name == "handshake_latency_ms":

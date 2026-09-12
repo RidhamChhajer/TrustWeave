@@ -1,8 +1,8 @@
 # Build checkpoint
 
 - Scope: all remaining phases authorized; proceed sequentially with focused checks.
-- Current phase: 25 — Sensitivity Analysis (complete).
-- Completed phases: 1–25.
+- Current phase: 26 — Robustness Testing (complete).
+- Completed phases: 1–26.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
   pytest settings, environment example and ignore rules.
@@ -151,11 +151,20 @@
   Gradual first-trigger delays ranged 15–22 observations; requests ranged 3–15.
   Every sudden scenario triggered at observation delay 0. High threshold only alters
   CONTINUE/MONITOR, so its unchanged verification count is expected and documented.
-- Next phase: PHASE 26 — Robustness Testing.
+- Phase 26: trust/normalization.py, signal_collector.py, network/snapshot.py,
+  verification/verification.py, session_guard.py, tests/test_robustness.py, test_metrics.py.
+  Strict raw-field/finite-baseline validation; copied metadata views; stale/replayed
+  explicit observations rejected; dynamic snapshots expire after 30 seconds;
+  storage failure gates/closes transport; non-finite verification deadlines rejected.
+  Initial regression: 6 failures exposed coarse Windows timestamp equality and clock-stub
+  exhaustion. Corrected local-event ordering without weakening explicit replay rejection;
+  revised fixture to model elapsed time rather than count internal clock calls.
+  `.venv/Scripts/python.exe -m pytest -q --show-capture=no`: 68 passed in 5.46s.
+- Next phase: PHASE 27 — Security Review.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing commit `phase-25-sensitivity-analysis`; resolve its
+- Latest Git commit: containing commit `phase-26-robustness`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.

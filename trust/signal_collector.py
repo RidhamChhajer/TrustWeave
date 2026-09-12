@@ -1,7 +1,7 @@
 """Bounded in-memory stream of raw metadata. No normalization or scoring."""
 
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from time import monotonic
 import ipaddress
@@ -19,6 +19,7 @@ class Measurement:
     raw_value: float | dict | None
     normalized_value: None
     source: str
+    observed_at: float
 
 
 class ContextSignalCollector:
@@ -30,9 +31,15 @@ class ContextSignalCollector:
 
     @property
     def measurements(self) -> tuple[Measurement, ...]:
-        return tuple(self._records)
+        return tuple(replace(r, raw_value=r.raw_value.copy()) if isinstance(r.raw_value, dict) else r for r in self._records)
 
-    def record(self, session: SessionContext, signal: str, raw: float | dict | None, source: str) -> None:
+    def record(self, session: SessionContext, signal: str, raw: float | dict | None, source: str,
+               *, observed_at: float | None = None) -> None:
+        now = monotonic()
+        explicit_time = observed_at is not None
+        observed_at = now if observed_at is None else observed_at
+        if not math.isfinite(observed_at) or observed_at > now or now - observed_at > 30:
+            raise ValueError("stale or invalid observation time")
         shapes = {
             "handshake_latency_ms": set(), "rtt": {"latest_ms", "variation_ms", "sample_count"},
             "session_establishments": {"count", "window_seconds"},
@@ -58,8 +65,17 @@ class ContextSignalCollector:
                     raise ValueError("metadata must contain nonnegative measurements")
         if isinstance(raw, dict):
             raw = raw.copy()
+        direction = raw.get("direction") if isinstance(raw, dict) else None
+        for previous in reversed(self._records):
+            previous_direction = previous.raw_value.get("direction") if isinstance(previous.raw_value, dict) else None
+            if (previous.session_id, previous.signal_name, previous_direction) == (session.session_id, signal, direction):
+                # Windows monotonic clocks can assign equal times to distinct local events.
+                # Explicit imported timestamps must still reject replayed observations.
+                if observed_at < previous.observed_at or (explicit_time and observed_at == previous.observed_at):
+                    raise ValueError("duplicate or out-of-order observation")
+                break
         self._records.append(Measurement(datetime.now(timezone.utc).isoformat(), session.session_id,
-                                         session.relationship_id, signal, raw, None, source))
+                                         session.relationship_id, signal, raw, None, source, observed_at))
 
     def session_started(self, session: SessionContext) -> None:
         now = monotonic()
