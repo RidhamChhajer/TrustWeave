@@ -28,8 +28,8 @@ It does not replace live observations with simulated data.
 
 Evaluation runs all six scenarios; sensitivity saves a 33-run CSV comparison.
 `client.final_demo` combines bootstrap, learning, sudden anomaly, MISMATCH blocking,
-fresh recovery, repeat-anomaly MATCH and renewed encrypted messaging. Phase 30 clean
-environment validation remains blocked by Windows policy; see docs/reproducibility.md.
+fresh recovery, repeat-anomaly MATCH and renewed encrypted messaging. All 31 phases,
+including separate-clone/venv validation, are complete; see docs/reproducibility.md.
 Outputs under `artifacts/` and metadata databases under `.state/` are local and ignored
 by Git. Dashboard identities are temporary per process; CLI-provisioned identities persist.
 See [architecture](docs/architecture.md), [algorithms](docs/algorithms.md),
@@ -140,8 +140,9 @@ does not export them. Bidirectional authenticated decryption tests verify compat
 keys without printing them. Identity keys, public fingerprints, and TLS traffic keys
 are separate concepts. No custom key exchange, cipher, or second encryption layer is used.
 
-On this machine, Windows Application Control blocks cryptography's native DLL in the
-Codex sandbox. Tests run successfully using approved execution outside that sandbox.
+Windows Smart App Control initially blocked cryptography's native DLL in the fresh
+environment. After the user addressed the block, clean-environment validation passed.
+This OS policy dependency is documented in docs/reproducibility.md.
 
 ## Verification and limitations
 

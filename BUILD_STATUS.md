@@ -1,10 +1,10 @@
 # Build checkpoint
 
 - Scope: all remaining phases authorized; proceed sequentially with focused checks.
-- Current phase: 31 — Final End-to-End Demo (complete in existing environment).
-- Completed phases: 1–29 and 31. Phase 30 remains externally blocked/incomplete.
-- User explicitly authorized completing the remaining demo in the working environment
-  while preserving the Phase 30 blocker. This is not full clean-environment sign-off.
+- Current phase: all 31 phases complete for the local experimental prototype.
+- Completed phases: 1–31. Phase 30's historical Windows block is resolved for this run.
+- No unresolved implementation blockers. Not production-ready; security/measurement
+  limitations remain documented. Reproduction used a separate clone/venv on the same PC.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
   pytest settings, environment example and ignore rules.
@@ -192,7 +192,20 @@
   administrator-approved process, or reproduction must run on a permitted clean machine.
   Reproduction directory is retained (ignored by Git). Do not substitute the old environment
   and label that a clean reproduction. Phase 31 subsequently completed by user authorization.
-- Next action: resolve Windows policy and complete PHASE 30; no further coding phase remains.
+- Phase 30 resolution (2026-09-12): user reported IMPORT OK after personally addressing
+  the Windows block. Read-only diagnosis identified Smart App Control, not an enterprise
+  administrator allowlist; the earlier generic allowlist suggestion was inapplicable.
+  No OS settings were changed by the assistant. Clean clone/venv validation completed:
+  `python -m pytest -q --show-capture=no`: 68 passed in 9.10s;
+  `python -m pip check`: no broken requirements; `python -m client.demo`: DEMO_SUCCESS;
+  `python -m experiments.sudden`: acceptance passed (69.6540, delta -29.8517).
+  Fast-forwarded clean clone 4021bf6 -> 115f3da using fetch + merge --ff-only;
+  `python -m client.final_demo`: 10 checks passed, 27 observations, 4 verifications,
+  final trust 97.058775. No .env/credentials/database copied from the working environment.
+  Clean dashboard at 127.0.0.1:8768 visually checked: live MATCH/SUCCESS/fresh session,
+  active communication/Stop/Idle and isolated sudden-drop table all confirmed.
+  This is clean-environment validation on the same OS, not independent-machine certification.
+- Next action: none required for the requested phases; presentation/deployment are separate work.
 - Follow-up: user authorized system diagnosis; computer-use instructions read and runtime
   initialized. Skill prohibits security UI/settings automation. Read-only CodeIntegrity
   events 3077/3033 confirm policy {0283ac0f-fff1-49ae-ada1-8a933130cad6} blocks fresh
@@ -212,5 +225,5 @@
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing commit `phase-31-final-demo`; resolve its
+- Latest Git commit: containing commit `phase-30-reproducibility`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.

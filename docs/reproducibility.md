@@ -1,39 +1,51 @@
-# Clean-environment reproduction checkpoint
+# Clean-environment reproduction — passed
 
-2026-09-12: cloned committed Phase 29 (`4021bf6`) locally into `artifacts/repro`
-without copying untracked .env, identities, databases or artifacts. Created a new virtual
-environment and installed every pinned dependency. `pip check` passed.
+Phase 30 completed on 2026-09-12 using a separate local Git clone and freshly installed
+virtual environment under artifacts/repro. No .env, credentials or database was copied
+from the original working environment. This validates a clean environment on the same
+Windows PC, not portability to an independently configured machine.
 
-The fresh interpreter cannot import cryptography's `_rust.pyd`: Windows reports
-“An Application Control policy has blocked this file.” Approved execution outside the
-sandbox did not resolve it. The existing and fresh DLL SHA-256 hashes are identical:
-`6C69EB01DEED404F8D16F4F23B176A1080745EA4B1C2DFD4C64E874E93782BF4`.
-The existing environment still passes 68 tests. This does **not** establish clean-machine
-reproducibility; Phase 30 remains incomplete. Phase 31 was subsequently completed in
-the existing environment with explicit user authorization, without clearing this blocker.
+## Evidence
 
-Follow-up diagnosis: read-only CodeIntegrity/Operational inspection confirms events
-3077 and 3033 naming the fresh `_rust.pyd` and blocking policy
-`{0283ac0f-fff1-49ae-ada1-8a933130cad6}` (enterprise signing requirements).
-A fresh approved import retry still failed. CiTool was unavailable on PATH.
-The requested computer-use skill prohibits automating security apps/settings, so no
-security UI or policy was modified. An administrator can use these event/policy details
-to investigate a narrowly scoped approval; do not broadly disable protection.
+- Cloned Phase 29 (4021bf6); created a fresh venv; installed all requirements.txt pins.
+- Fresh-environment full suite: 68 passed in 9.10s.
+- pip check: no broken requirements.
+- client.demo: real mutual TLS 1.3, three encrypted echo round trips, DEMO_SUCCESS.
+- experiments.sudden: score 69.6540 and delta -29.8517; immediate trigger above 50.
+- Fast-forwarded the clean clone to completed Phase 31 (115f3da) without copying working files.
+- client.final_demo: all 10 acceptance checks passed; 27 observations, 4 verifications,
+  final trust 97.058775. Includes MISMATCH send rejection and fresh verified recovery.
+- Clean-environment dashboard served on 127.0.0.1:8768: rendered controls, live pending
+  comparison, MATCH/SUCCESS, new session ID, active messaging and Stop/Idle verified.
+  Isolated sudden experiment visibly showed 99.51 -> 69.65, delta -29.85 and re-establishment.
 
-Required external action: an authorized administrator approves the module/environment
-through the organization's normal policy, or use another permitted clean machine.
-Do not disable or bypass Application Control. Once permitted, from the clean clone run:
+## Historical Windows block and correction
+
+The fresh cryptography _rust.pyd initially failed with an Application Control error,
+even under approved execution. CodeIntegrity events 3077/3033 named policy
+{0283ac0f-fff1-49ae-ada1-8a933130cad6}. Further event 3099 inspection identified
+VerifiedAndReputableDesktop: Smart App Control, not an enterprise-specific allowlist.
+The initial generic administrator-allowlist advice was therefore inapplicable.
+Existing/fresh DLL SHA-256 hashes matched:
+6C69EB01DEED404F8D16F4F23B176A1080745EA4B1C2DFD4C64E874E93782BF4.
+
+The user personally addressed the block and reported IMPORT OK; the subsequent checks
+above passed. The assistant did not modify security settings. This success does not
+establish compatibility with every Smart App Control configuration. Prefer supported,
+trusted dependencies and preserve OS protection; this prototype is not production-ready.
+
+## Repeat from a clean checkout
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q --show-capture=no
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe -m pip check
+.\.venv\Scripts\python.exe -m pytest -q --show-capture=no
 .\.venv\Scripts\python.exe -m client.demo
+.\.venv\Scripts\python.exe -m client.final_demo
 .\.venv\Scripts\python.exe -m experiments.sudden
 .\.venv\Scripts\python.exe -m dashboard.app
 ```
 
-Confirm dashboard access and the isolated sudden-drop control in the clean environment.
-The existing environment's browser rendering and live MATCH/graph/Stop flow have now
-been inspected successfully. `python -m client.final_demo` passes all ten combined
-acceptance checks there; repeat it after Phase 30's environment approval. Its raw result
-is artifacts/final-demo.json. Existing-environment final regression: 68 passed in 4.36s.
+The dashboard defaults to port 8766. Metadata/results remain under ignored .state and
+artifacts directories. No passwords or traffic keys are printed or committed.
