@@ -191,10 +191,14 @@
   Reproduction directory is retained (ignored by Git). Do not substitute the old environment
   and label that a clean reproduction. No Phase 31 implementation started.
 - Next action: resume PHASE 30 in an authorized environment; then PHASE 31 final demo.
+- Follow-up: user authorized system diagnosis; computer-use instructions read and runtime
+  initialized. Skill prohibits security UI/settings automation. Read-only CodeIntegrity
+  events 3077/3033 confirm policy {0283ac0f-fff1-49ae-ada1-8a933130cad6} blocks fresh
+  _rust.pyd; approved import retry still failed. No security settings changed.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing checkpoint commit `checkpoint-phase-30-policy-blocker`; resolve its
+- Latest Git commit: containing checkpoint commit `checkpoint-phase-30-policy-diagnosis`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.
