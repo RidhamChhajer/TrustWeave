@@ -71,7 +71,7 @@ class SessionGuard:
                         return decision
                     self.verified = True
                     previous = self.engine.score
-                    self.engine.score = max(previous, 75.0)
+                    self.engine.score = max(previous, self.engine.policy.verified_floor)
                     self.store.assessment(self.context.session_id, Assessment(previous, self.engine.score, self.engine.score), "verification_success")
                     self.baselines = replace(self.baselines, peer_ip=self.context.peer_ip)
                     self.store.set_baselines(self.context.relationship_id, self.baselines)
@@ -97,7 +97,8 @@ class SessionGuard:
                 await self.restrict()
                 raise
 
-    async def restrict(self):
+    async def restrict(self) -> None:
+        """Persist failure when possible; always close the underlying transport."""
         self.restricted = True
         self.last_key_action = "RESTRICT_SESSION"
         self.verified = False
@@ -109,6 +110,6 @@ class SessionGuard:
         finally:
             await self.connection.close()
 
-    async def close(self):
+    async def close(self) -> None:
         await self.connection.close()
         self.store.finish_session(self.context.session_id, "RESTRICTED" if self.restricted else "CLOSED")

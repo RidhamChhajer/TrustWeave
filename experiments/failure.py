@@ -1,5 +1,4 @@
 """MISMATCH closes a real TLS connection; MATCH on a fresh session restores service."""
-import json
 from experiments.normal import trace as warmup
 from experiments.controller import sample
 from experiments.runner import execute

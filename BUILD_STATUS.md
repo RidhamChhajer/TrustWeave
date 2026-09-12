@@ -1,8 +1,8 @@
 # Build checkpoint
 
 - Scope: all remaining phases authorized; proceed sequentially with focused checks.
-- Current phase: 27 — Security Review (complete).
-- Completed phases: 1–27.
+- Current phase: 28 — Code Quality (complete).
+- Completed phases: 1–28.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
   pytest settings, environment example and ignore rules.
@@ -165,11 +165,16 @@
   `.venv/Scripts/python.exe -m pytest -q tests/test_audit.py tests/test_dashboard.py tests/test_secure.py --show-capture=no`:
   15 passed in 1.80s. Source review records cooperative local guard, simulated OOB,
   legacy runtime, local trusted users, non-tamper-evident audit and no production DoS defenses.
-- Next phase: PHASE 28 — Code Quality Refactor.
+- Phase 28: centralized metadata age/dashboard port in config/settings.py; configurable
+  verified floor in TrustPolicy; guard type/doc cleanup; removed unused imports and stale
+  handshake comment. Updated collector, snapshot, dashboard, crypto docs and demos.
+  `.venv/Scripts/python.exe -m pytest -q tests/test_trust.py tests/test_robustness.py tests/test_dashboard.py --show-capture=no`:
+  7 passed in 1.26s. `python -m pip check`: no broken requirements.
+- Next phase: PHASE 29 — Documentation.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing commit `phase-27-security-review`; resolve its
+- Latest Git commit: containing commit `phase-28-code-quality`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.

@@ -59,7 +59,7 @@ def provision(directory: Path, passwords: dict[str, bytes], *, server_names=("bo
     """Create a new demo CA and endpoint folders. Never overwrite existing data.
 
     This is trusted, single-machine bootstrap, not identity verification over a network.
-    The caller supplies separate passwords for ca, alice and bob without logging them.
+    The caller supplies separate passwords for ca, alice and each server without logging them.
     """
     if not server_names or len(set(server_names)) != len(server_names) or any(role not in {"bob", "charlie"} for role in server_names):
         raise ValueError("invalid development server names")

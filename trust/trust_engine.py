@@ -12,10 +12,13 @@ class TrustPolicy:
     alpha: float = 0.3
     initial_trust: float = 45.0
     weights: tuple[float, ...] = (0.2, 0.2, 0.2, 0.2, 0.2)
+    verified_floor: float = 75.0
 
     def __post_init__(self):
         if not 0 < self.alpha <= 1 or not 0 <= self.initial_trust <= 100:
             raise ValueError("invalid EMA policy")
+        if not 0 <= self.verified_floor <= 100:
+            raise ValueError("invalid verified trust floor")
         if len(self.weights) != 5 or any(not math.isfinite(w) or w < 0 for w in self.weights):
             raise ValueError("invalid weights")
         if not math.isclose(sum(self.weights), 1.0):

@@ -4,6 +4,9 @@ from dataclasses import dataclass
 import math
 import os
 
+METADATA_MAX_AGE_SECONDS = 30.0
+DASHBOARD_PORT = 8766
+
 
 @dataclass(frozen=True)
 class Settings:

@@ -10,6 +10,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel
 
 from dashboard.runtime import Runtime
+from config.settings import DASHBOARD_PORT
 from verification.verification import Outcome
 from experiments.runner import run_trace, save
 from experiments.sudden import trace, validate
@@ -96,4 +97,4 @@ app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8766, access_log=False)
+    uvicorn.run(app, host="127.0.0.1", port=DASHBOARD_PORT, access_log=False)

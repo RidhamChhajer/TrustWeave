@@ -128,7 +128,7 @@ class SecureServer:
             # Random epoch identifier is sent only within the authenticated TLS channel.
             writer.write(bytes.fromhex(session_id))
             await asyncio.wait_for(writer.drain(), self.settings.io_timeout)
-            # asyncio supplies streams after TLS; server handshake duration is unavailable.
+            # Handshake timing is collected separately from the public connection epoch.
             info = SessionInfo(session_id, protocol=peer.protocol, cipher=peer.cipher,
                                peer_fingerprint=peer.fingerprint)
             session = SessionContext.create(session_id, self._local_pin, peer.fingerprint, writer.get_extra_info("peername")[0])

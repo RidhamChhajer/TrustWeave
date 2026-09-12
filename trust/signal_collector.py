@@ -8,6 +8,7 @@ import ipaddress
 import math
 
 from network.session import SessionContext
+from config.settings import METADATA_MAX_AGE_SECONDS
 
 
 @dataclass(frozen=True)
@@ -38,7 +39,7 @@ class ContextSignalCollector:
         now = monotonic()
         explicit_time = observed_at is not None
         observed_at = now if observed_at is None else observed_at
-        if not math.isfinite(observed_at) or observed_at > now or now - observed_at > 30:
+        if not math.isfinite(observed_at) or observed_at > now or now - observed_at > METADATA_MAX_AGE_SECONDS:
             raise ValueError("stale or invalid observation time")
         shapes = {
             "handshake_latency_ms": set(), "rtt": {"latest_ms", "variation_ms", "sample_count"},
