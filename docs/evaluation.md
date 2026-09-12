@@ -18,3 +18,14 @@ contextual inputs and automatic simulated OOB answers. They are not real attacks
 
 Thresholds remain the declared defaults (80/50, delta 10, alpha .3, equal weights).
 Repeated verification during persistent degradation is retained in raw results, not filtered out.
+
+## Sensitivity protocol
+
+`python -m experiments.sensitivity` runs an explicitly predeclared, one-factor-at-a-time
+sweep across normal, gradual and sudden traces. Variants: alpha .15/.30/.50; high threshold
+70/80/90; low threshold 40/50/60; drop threshold 5/10/20; equal, continuity-heavy and
+latency-heavy weights. Eleven distinct configurations, 33 runs. No result is used to
+automatically change defaults. All raw traces and the CSV comparison table are retained.
+This small sweep exposes sensitivity, not an optimized or statistically validated policy.
+The high threshold currently changes CONTINUE versus MONITOR only; both retain the same
+low/drop verification rules, so identical verification counts for that factor are expected.

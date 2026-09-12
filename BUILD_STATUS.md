@@ -1,8 +1,8 @@
 # Build checkpoint
 
 - Scope: all remaining phases authorized; proceed sequentially with focused checks.
-- Current phase: 24 — Quantitative Evaluation (complete).
-- Completed phases: 1–24.
+- Current phase: 25 — Sensitivity Analysis (complete).
+- Completed phases: 1–25.
 - Working preference: concise updates; focused new tests and a single relevant regression run.
 - Files: configuration, event logger, smoke entry point, foundation tests, README,
   pytest settings, environment example and ignore rules.
@@ -145,11 +145,17 @@
   Four injected episodes triggered; gradual delay 18 observations, abrupt cases 0.
   Sudden dispatch latency 5.2486ms this run; automatic responses are not human OOB latency.
   Definitions include actual TLS-epoch denominators and exclude required bootstrap from false requests.
-- Next phase: PHASE 25 — Threshold and Sensitivity Analysis.
+- Phase 25: experiments/sensitivity.py, docs/evaluation.md.
+  `.venv/Scripts/python.exe -m experiments.sensitivity`: 33 runs completed;
+  raw traces, summary and table.csv in artifacts/sensitivity. Defaults unchanged.
+  Gradual first-trigger delays ranged 15–22 observations; requests ranged 3–15.
+  Every sudden scenario triggered at observation delay 0. High threshold only alters
+  CONTINUE/MONITOR, so its unchanged verification count is expected and documented.
+- Next phase: PHASE 26 — Robustness Testing.
 - Git: phase 1 is 2074c5d. Writes require elevated execution and a command-local
   safe.directory for this exact workspace because sandbox/desktop owners differ.
 - Git: phase 2 is 5e5f77b.
 - Git: phase 3 is 9239af1.
 - Git: phase 4 is 1204ba8.
-- Latest Git commit: containing commit `phase-24-quantitative-evaluation`; resolve its
+- Latest Git commit: containing commit `phase-25-sensitivity-analysis`; resolve its
   hash with `git log -1 --format="%h %s"`. No self-referential hash is stored here.
