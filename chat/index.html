@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Private LAN Chat</title><link rel="stylesheet" href="/chat.css"><script src="/chat.js" defer></script></head>
+<body><main><header><div><small>MUTUAL TLS 1.3 · LOCAL NETWORK</small><h1 id="title">Private chat</h1></div><span id="badge">Connecting to local service</span></header>
+<section id="setup"><form id="unlock"><label>Identity password<input id="password" type="password" autocomplete="off" required></label><button>Unlock identity</button></form>
+<div id="connection" hidden><p id="addresses"></p><label id="address-label" hidden>Bob's LAN IPv4<input id="address" placeholder="192.168.1.20" inputmode="decimal"></label><button id="start">Start server</button><button id="disconnect">Disconnect / stop</button></div></section>
+<p id="error" role="alert"></p><p id="condition" hidden></p>
+<section class="conversation"><div id="messages" role="log" aria-live="polite"></div><form id="compose"><label class="sr-only" for="text">Message</label><textarea id="text" rows="2" placeholder="Compare safety codes on both devices to enable chat" maxlength="4096"></textarea><button id="send" disabled>Send</button></form><small>Conversation stays in memory for this application run. At most 500 recent messages are retained by default.</small></section>
+<section id="observatory" hidden></section>
+<dialog id="verification"><h2>Compare safety codes</h2><p>Compare this code directly with the other person. Both of you must choose MATCH.</p><strong id="code"></strong><p id="reason"></p><p id="decision-state"></p><button id="restore-pending" hidden>Restore normal condition</button><div class="actions"><button data-decision="MATCH">MATCH</button><button data-decision="MISMATCH">MISMATCH</button><button data-decision="CANCEL">CANCEL</button></div></dialog>
+</main></body></html>

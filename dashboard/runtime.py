@@ -1,6 +1,7 @@
 import asyncio
 from collections import deque
-from dataclasses import asdict, replace
+from dataclasses import replace
+from dashboard.presentation import guard_snapshot
 from pathlib import Path
 import secrets
 import tempfile
@@ -97,13 +98,4 @@ class Runtime:
         guard = self.guard
         return {"running": self.task is not None and not self.task.done(), "mode": "real",
                 "verification_simulated": True, "error": self.error, "history": list(self.history),
-                "session": asdict(guard.connection.info) if guard else None,
-                "score": guard.engine.score if guard else None,
-                "delta": guard.last_assessment.delta if guard and guard.last_assessment else None,
-                "decision": asdict(guard.last_decision) if guard and guard.last_decision else None,
-                "pending": asdict(guard.pending) if guard and guard.pending else None,
-                "restricted": guard.restricted if guard else False,
-                "outcome": guard.last_outcome if guard else None,
-                "key_action": guard.last_key_action if guard else None,
-                "key_id": guard.connection.info.key_id if guard else None,
-                "signals": guard.last_raw if guard else {}}
+                **guard_snapshot(guard)}

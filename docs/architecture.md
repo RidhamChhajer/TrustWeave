@@ -1,5 +1,10 @@
 # Architecture and network boundaries
 
+The two-device browser chat is documented in
+[chat architecture](two-device-architecture.md). It adds independently sending peers,
+dual human comparison, chat-specific gates and loopback browser bridges. The diagram
+below describes the preserved original echo/experimental path.
+
 ```
 Alice application <== framed bytes inside mutual TLS 1.3 ==> Bob echo application
        |                                                   |

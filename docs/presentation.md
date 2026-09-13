@@ -1,5 +1,9 @@
 # Presentation outline
 
+For the two-device chat presentation, use the
+[dedicated presenter script](two-device-presentation.md). The outline below is for
+the preserved dashboard and deterministic experiment demonstration.
+
 1. Problem: fixed verification schedules ignore changing communication context.
 2. Existing limitation: a high historical score can hide a sharp recent deterioration.
 3. Architecture: show architecture.md; TLS provides authentication/confidentiality independently.

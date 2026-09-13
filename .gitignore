@@ -1,16 +1,61 @@
+# Python environments and generated files
 .venv/
+venv/
+env/
 __pycache__/
-.pytest_cache/
 *.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Local settings (keep the documented, non-secret example)
 .env
+.env.*
+!.env.example
+.codex/
+.vscode/
+.idea/
+
+# Identity material and portable device bundles
 .credentials/
+demo-identities/
+alice-bundle/
+bob-bundle/
+organizer/
 *.key
 *.pem
-*.pcap*
-artifacts/
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Runtime state, databases, logs and captured network traffic
 .state/
+artifacts/
 *.db
 *.db-shm
 *.db-wal
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.sqlite3-journal
+*.log
+*.pcap*
+*.keylog
+
+# Test, coverage and tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .coverage
+.coverage.*
+coverage.xml
 htmlcov/
+
+# Operating-system temporary files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~

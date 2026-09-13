@@ -15,7 +15,8 @@ from verification.verification import Outcome, VerificationRequest, verify
 class SessionGuard:
     def __init__(self, connection, store, responder, *, reconnect, mode="real", trust_policy=TrustPolicy(),
                  trigger_policy=TriggerPolicy(), normalization_policy=NormalizationPolicy(), timeout=30,
-                 key_policy=KeyPolicy()):
+                 key_policy=KeyPolicy(), verification_simulated=True, rotate_on_initial_verification=True,
+                 verify_before_rotation=False):
         self.connection = connection
         self.store = store
         self.responder = responder
@@ -27,6 +28,9 @@ class SessionGuard:
         self.trigger_policy = trigger_policy
         self.normalization_policy = normalization_policy
         self.timeout = timeout
+        self.verification_simulated = verification_simulated
+        self.rotate_on_initial_verification = rotate_on_initial_verification
+        self.verify_before_rotation = verify_before_rotation
         self.context = connection.metrics.session
         connection.require_verification(True)
         row = store.start_session(self.context.session_id, self.context.relationship_id, mode, trust_policy.initial_trust)
@@ -54,11 +58,16 @@ class SessionGuard:
                 self.last_assessment = assessment
                 self.store.assessment(self.context.session_id, assessment)
                 decision = decide(assessment.score, assessment.delta, verified=self.verified, policy=self.trigger_policy)
+                if (self.verify_before_rotation and self.verified and not decision.requires_verification
+                    and monotonic() - self.key_started >= self.key_policy.rotation_seconds):
+                    decision = replace(decision, action="VERIFY", reason="rotation")
                 self.last_decision = decision
                 outcome = None
+                was_verified = self.verified
                 if decision.requires_verification:
                     self.connection.require_verification(True)
                     request = VerificationRequest.create(self.context.session_id, self.context.relationship_id, decision.reason)
+                    request = replace(request, simulated=self.verification_simulated)
                     self.pending = request
                     self.store.audit(self.context.session_id, "VERIFICATION_TRIGGERED", reason=decision.reason,
                                      score=decision.score, delta=decision.delta, simulated=request.simulated)
@@ -77,6 +86,8 @@ class SessionGuard:
                     self.store.set_baselines(self.context.relationship_id, self.baselines)
                 self.last_key_action = key_action(decision, outcome, age_seconds=monotonic() - self.key_started,
                                                   policy=self.key_policy)
+                if not was_verified and outcome == Outcome.SUCCESS and not self.rotate_on_initial_verification:
+                    self.last_key_action = "KEEP_CURRENT_KEY"
                 if self.last_key_action in {"REESTABLISH_KEY", "STANDARD_ROTATION"}:
                     self.connection.require_verification(True)
                     previous_id = self.context.session_id

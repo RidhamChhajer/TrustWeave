@@ -70,8 +70,11 @@ class SecureServer:
 
     @classmethod
     async def start(cls, settings: Settings, credentials: Credentials,
-                    password: Callable[[], bytes], handler: Handler) -> "SecureServer":
+                    password: Callable[[], bytes], handler: Handler, *, max_connections=64) -> "SecureServer":
+        if type(max_connections) is not int or not 1 <= max_connections <= 256:
+            raise ValueError("invalid connection bound")
         instance = cls(settings, credentials, handler)
+        instance.max_connections = max_connections
         ctx = context(credentials, password, server=True)
         loop = asyncio.get_running_loop()
         addresses = await loop.getaddrinfo(settings.host, settings.port, type=socket.SOCK_STREAM)
@@ -92,6 +95,9 @@ class SecureServer:
         loop = asyncio.get_running_loop()
         while True:
             accepted, _ = await loop.sock_accept(self._listener)
+            if len(self._tasks) >= self.max_connections:
+                accepted.close()
+                continue
             accepted.setblocking(False)
             self._sockets.add(accepted)
             task = asyncio.create_task(self._establish(accepted, ctx))

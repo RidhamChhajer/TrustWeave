@@ -26,11 +26,12 @@ class RelationshipStore:
     def audit(self, session_id, event, **metadata):
         allowed = {"SESSION_STARTED", "SESSION_TERMINATED", "SESSION_RESTRICTED",
                    "SIGNAL_UPDATED", "TRUST_UPDATED", "DELTA_UPDATED", "VERIFICATION_TRIGGERED",
-                   "VERIFICATION_SUCCESS", "VERIFICATION_FAILURE", "KEY_UPDATED"}
+                   "VERIFICATION_SUCCESS", "VERIFICATION_FAILURE", "KEY_UPDATED", "DEMO_STARTED", "DEMO_STOPPED"}
         numeric = {"score", "delta", "previous", "handshake", "rtt", "continuity", "timing", "renegotiation"}
-        enums = {"reason": {"assessment", "verification_success", "verification_failure", "sudden_drop", "new_relationship", "low_trust"},
+        enums = {"reason": {"assessment", "verification_success", "verification_failure", "sudden_drop", "new_relationship", "low_trust", "rotation"},
                  "outcome": {"SUCCESS", "FAILURE", "CANCELLED", "TIMEOUT"},
-                 "action": {"KEEP_CURRENT_KEY", "STANDARD_ROTATION", "REESTABLISH_KEY", "RESTRICT_SESSION"}}
+                 "action": {"KEEP_CURRENT_KEY", "STANDARD_ROTATION", "REESTABLISH_KEY", "RESTRICT_SESSION"},
+                 "condition": {"normal", "latency", "reconnect_burst", "ip_change"}}
         if event not in allowed:
             raise ValueError("invalid audit event")
         for key, value in metadata.items():

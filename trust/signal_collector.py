@@ -47,7 +47,7 @@ class ContextSignalCollector:
             "session_continuity": {"peer_ip"}, "communication_timing": {"direction", "interval_ms"},
         }
         if signal not in shapes or source not in {"session_events", "authenticated_transport", "unavailable",
-                                                  "tcp_tls_connect", "tls_handshake", "frame_completion", "application_echo"}:
+                                                  "tcp_tls_connect", "tls_handshake", "frame_completion", "application_echo", "authenticated_heartbeat"}:
             raise ValueError("unknown metadata signal or source")
         if raw is not None:
             if signal == "handshake_latency_ms":

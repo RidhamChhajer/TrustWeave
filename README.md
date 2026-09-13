@@ -1,208 +1,164 @@
-# Adaptive Trust-Triggered Cryptographic Verification
+# TrustWeave
 
-Experimental Computer Network Technology project implementing authenticated TLS messaging,
-metadata-based EMA trust, independent sudden-drop triggers, persistent relationship history,
-simulated out-of-band verification, fresh-session key lifecycle and an observable dashboard.
-The original three specifications are preserved; see BUILD_STATUS.md for exact progress.
+Adaptive-trust encrypted chat for private networks. An experimental application that uses connection metadata to decide when users should verify each other's identity again.
 
-## Start here
+Built as a Computer Network Technology project, TrustWeave combines **mutual TLS 1.3**, **adaptive trust scoring**, and **two-person safety-code verification**. It is designed for two Windows laptops on the same private Wi-Fi network.
 
-After installing dependencies below:
+## Overview
 
-```powershell
-.\.venv\Scripts\python.exe -m dashboard.app
+The two laptops are called **Alice** and **Bob**:
+
+| Alice | Bob |
+|---|---|
+| Connects to Bob's laptop | Starts the chat server |
+| Has a chat interface and live trust dashboard | Has a simple chat interface |
+| Can introduce controlled demo conditions | Responds to safety-code prompts |
+
+Both users compare independently calculated safety codes before chat becomes available. If connection behavior triggers another verification, messaging pauses. Successful reverification establishes a fresh TLS session; a mismatch, cancellation, or timeout closes the session.
+
+**Project status:** Implementation and automated checks are complete. The latest recorded suite has **170 passing tests**. Physical two-laptop acceptance testing is still pending. This is an academic prototype, not a production messaging service.
+
+## Features
+
+- **Authenticated encrypted messaging:** mutual TLS 1.3 with certificate validation, hostname verification, and peer identity pinning.
+- **Dual verification:** both users must approve the same safety-code comparison before messaging is enabled.
+- **Adaptive trust:** connection measurements feed weighted exponential moving average (EMA) scoring and sudden-drop detection.
+- **Live observability:** Alice sees trust, round-trip time (RTT), normalized signals, session details, and a metadata-only audit timeline.
+- **Controlled demonstrations:** real induced latency, bounded TLS reconnects, and explicitly labeled IP-metadata simulation.
+- **In-memory conversation:** recent messages survive browser refresh and successful TLS recovery; application exit clears the conversation.
+
+## Quick start: two Windows laptops
+
+### Requirements
+
+- Two Windows laptops on the same private Wi-Fi network.
+- Python 3.10 or newer with TLS 1.3 support.
+- Internet access for the initial dependency installation.
+- A USB drive for transferring the appropriate identity bundle.
+
+### 1. Install on both laptops
+
+Download or clone this repository onto each laptop. In each project folder, double-click:
+
+```text
+setup-demo.cmd
 ```
 
-Open http://127.0.0.1:8766. Start a live session, resolve the explicitly simulated
-fingerprint comparison, and observe metadata/trust. The separate **Run sudden-drop
-experiment** button shows a complete, automatically verified controlled experiment.
-It does not replace live observations with simulated data.
+This creates a local Python environment and installs the pinned dependencies. Do not copy a `.venv` folder from one laptop to the other.
 
-```powershell
-.\.venv\Scripts\python.exe -m client.adaptive_demo
-.\.venv\Scripts\python.exe -m client.final_demo
-.\.venv\Scripts\python.exe -m experiments.sudden
-.\.venv\Scripts\python.exe -m experiments.evaluation
-.\.venv\Scripts\python.exe -m experiments.sensitivity
+### 2. Create the identities once
+
+On one trusted laptop, double-click:
+
+```text
+provision-demo.cmd
 ```
 
-Evaluation runs all six scenarios; sensitivity saves a 33-run CSV comparison.
-`client.final_demo` combines bootstrap, learning, sudden anomaly, MISMATCH blocking,
-fresh recovery, repeat-anomaly MATCH and renewed encrypted messaging. All 31 phases,
-including separate-clone/venv validation, are complete; see docs/reproducibility.md.
-Outputs under `artifacts/` and metadata databases under `.state/` are local and ignored
-by Git. Dashboard identities are temporary per process; CLI-provisioned identities persist.
-See [architecture](docs/architecture.md), [algorithms](docs/algorithms.md),
-[experiments/results](docs/experiments.md), [metric definitions](docs/evaluation.md),
-[security review](docs/security-review.md), and [presentation outline](docs/presentation.md).
+Enter three different passwords for the organizer, Alice, and Bob. Use at least 16 characters with eight distinct characters in each password. Keep these passwords available for the appropriate participant.
 
-## Development setup (PowerShell)
+The command creates:
+
+```text
+demo-identities/
+|-- organizer/      # Keep on the trusted provisioning laptop
+|-- alice-bundle/   # Alice's credentials
+`-- bob-bundle/     # Bob's credentials
+```
+
+Place `alice-bundle` inside `demo-identities` on Alice's laptop and `bob-bundle` inside `demo-identities` on Bob's laptop, using trusted USB transfer as needed. Transfer only the matching device bundle. Keep the organizer's CA private key on the trusted laptop, and communicate passwords separately.
+
+### 3. Start Bob, then Alice
+
+| Laptop | Open | In the browser |
+|---|---|---|
+| Bob | `start-bob.cmd` | Unlock the identity, click **Start server**, and note the private IPv4 address |
+| Alice | `start-alice.cmd` | Unlock the identity, enter Bob's IPv4 address, and click **Connect to Bob** |
+
+If Windows Firewall prompts, allow Python on **Private networks only**. The application does not modify firewall settings automatically.
+
+### 4. Compare and chat
+
+Compare the **entire safety code** on both screens. If the codes match, select **MATCH on both laptops** within the comparison window. Sending remains disabled until both users approve.
+
+You can now exchange messages. To exit, press **Ctrl+C** in each launcher window; closing the browser alone does not stop the local service.
+
+For detailed instructions or connection problems, see the [setup and troubleshooting guide](docs/two-device-operation.md).
+
+## How it works
+
+```mermaid
+flowchart LR
+    A["Alice browser<br/>Chat + trust dashboard"] <-->|"Local WebSocket"| AR["Alice runtime<br/>Trust engine + chat gate"]
+    AR <-->|"Private Wi-Fi<br/>Mutual TLS 1.3"| BR["Bob runtime<br/>TLS listener + chat gate"]
+    BR <-->|"Local WebSocket"| B["Bob browser<br/>Chat + safety-code prompts"]
+```
+
+Both browser services bind to `127.0.0.1:8766`. Only Bob's TLS listener, on port `8765`, accepts LAN connections. Alice connects to Bob's numeric IP while authenticating the TLS hostname `bob.local`.
+
+The trust engine observes handshake latency, heartbeat RTT and variation, timing, peer IP, and recent session establishments. It does not inspect message contents to calculate trust. Heartbeats continue while users are not typing.
+
+See [architecture and security boundaries](docs/two-device-architecture.md) for implementation details.
+
+## Demonstration controls
+
+These controls appear on Alice's dashboard:
+
+| Control | What changes | Display label |
+|---|---|---|
+| Induce latency | Bob intentionally delays chat/pong handling | `REAL INDUCED CONDITION` |
+| Reconnect burst | Up to three fresh authenticated TLS connections | `REAL CONNECTION EVENT` |
+| Simulate IP continuity change | Only the trust input changes; the physical IP stays the same | `SIMULATED METADATA` |
+| Restore normal | Removes the active condition | `NORMAL OBSERVATION` |
+
+Only one condition runs at a time. Verification depends on the measured trust score and its change; every control does not necessarily produce an immediate prompt. Use the [presenter script](docs/two-device-presentation.md) for a complete walkthrough.
+
+## Development and testing
+
+From the repository folder in PowerShell:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m main
-.\.venv\Scripts\python.exe -m pytest
-```
-
-Use Python 3.10 or newer with TLS 1.3 support. The currently available local runtime
-is Python 3.10.11 with OpenSSL 1.1.1t; it is old and is used only for local experimental
-validation. Use a maintained, patched Python/OpenSSL runtime before network deployment.
-
-Configuration comes from shell environment variables: TRUST_HOST (127.0.0.1), TRUST_PORT
-(8765), TRUST_MAX_FRAME (1048576), TRUST_CONNECT_TIMEOUT (10), TRUST_IO_TIMEOUT (30),
-TRUST_CLOSE_TIMEOUT (3). For example, `$env:TRUST_PORT = '9000'` in PowerShell.
-No `.env` file is loaded implicitly: renaming an example to `.env` alone does not apply
-settings. Keep `.env` private and ignored. Never put secrets in configuration or source.
-FastAPI/Uvicorn serve the local dashboard; policy dataclasses configure scoring and triggers.
-
-See `BUILD_STATUS.md` for phase checkpoints and exact test evidence.
-
-## Run the standalone TLS foundation
-
-For a noninteractive demonstration with temporary, freshly generated encrypted
-credentials and real loopback TCP sockets:
-
-```powershell
-.\.venv\Scripts\python.exe -m client.demo
-```
-
-The output shows `TLSv1.3`, a negotiated authenticated cipher, the same session ID
-at Alice and Bob, frame byte counts, `DEMO_SUCCESS`, and connection closure.
-Three random binary messages make a round trip; messages/passwords/keys are never
-printed. The temporary encrypted credential directory is removed after the demo.
-
-For separate terminal processes, create persistent development identities first:
-
-```powershell
-.\.venv\Scripts\python.exe -m client.provision
-```
-
-Enter and confirm a separate password of at least 12 UTF-8 bytes for the CA, Alice,
-and Bob. Input is hidden; an insecure terminal fallback is refused. Provisioning
-refuses an existing output directory. Passwords are not saved and cannot be recovered.
-
-In terminal 1:
-
-```powershell
-.\.venv\Scripts\python.exe -m client.bob
-```
-
-In terminal 2:
-
-```powershell
-.\.venv\Scripts\python.exe -m client.alice
-```
-
-Enter the corresponding identity password in each terminal. Alice verifies three
-encrypted round trips and exits; Bob keeps listening until Ctrl+C. These CLI endpoints
-demonstrate message transport, not an interactive chat UI. Use `--help` for credential,
-host, port and server-name options. There is no plaintext fallback in either endpoint.
-The temporary phase-2 plaintext connector was removed; raw framing tests remain test-only.
-
-## Application interface
-
-`network.secure.connect(settings, credentials, password_callback, server_hostname=...)`
-returns an authenticated connection with `send(bytes)`, `receive() -> bytes`, `close()`,
-and immutable `info`. `SecureServer.start(settings, credentials, password_callback, handler)`
-invokes the asynchronous handler only after peer certificate and fingerprint validation.
-Both objects support asynchronous context managers. Bob's handler implements an echo.
-
-`info` exposes session ID, connection state, public peer fingerprint, TLS version and
-cipher. Alice's elapsed time includes connection, TLS and encrypted session-ID receipt;
-Bob's public elapsed field is `None`; its separate metadata includes measured handshake time.
-`key_id` is a non-secret connection-epoch label for TLS traffic keys, not an actual key,
-an exported TLS identifier, or a cryptographic fingerprint. A reconnect gets a fresh ID.
-
-Frames use a 4-byte unsigned big-endian length and up to 1 MiB of bytes. The length and
-payload are encrypted together inside TLS. Empty messages are supported. Invalid/truncated
-frames, operation timeouts, and TLS failures close the connection; concurrent receives
-are rejected, sends are serialized, and cleanup has a bounded per-writer deadline.
-Bob owns accepted sockets before TLS starts, so shutdown cancels incomplete handshakes
-as well as established sessions. Application handlers must cooperate with cancellation.
-
-The metadata object, trust modules and event logger never receive message bodies.
-The framing/application layer necessarily handles bytes at the endpoints. `SessionGuard`
-adds adaptive policy above the secure connection; the standalone Alice/Bob TLS CLIs
-intentionally demonstrate transport only. Use the dashboard/adaptive demo for policy integration.
-
-## Cryptographic foundation
-
-`crypto.identity` generates a local development CA and separate P-256 identities.
-Private keys use encrypted PKCS#8 (cryptography BestAvailableEncryption). Both peers
-receive CA trust and the other party's SHA-256 public-key fingerprint. Trust files
-must be provisioned through a trusted local channel and protected from replacement.
-
-`crypto.key_exchange` configures mutual TLS 1.3 with certificate validation, hostname
-checking on Alice, peer identity pin checks, no key logging, and no session tickets.
-OpenSSL derives independent directional traffic keys internally; application code
-does not export them. Bidirectional authenticated decryption tests verify compatible
-keys without printing them. Identity keys, public fingerprints, and TLS traffic keys
-are separate concepts. No custom key exchange, cipher, or second encryption layer is used.
-
-Windows Smart App Control initially blocked cryptography's native DLL in the fresh
-environment. After the user addressed the block, clean-environment validation passed.
-This OS policy dependency is documented in docs/reproducibility.md.
-
-## Verification and limitations
-
-```powershell
 .\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m client.final_demo
 .\.venv\Scripts\python.exe -m pip check
 ```
 
-Tests cover actual TCP/TLS exchanges, a test-only relay capturing opaque TLS records,
-post-handshake ciphertext corruption, certificate/pin/hostname failures, missing client
-certificates, TLS-version rejection, malformed framing, timeouts, reconnects, concurrency,
-metadata separation and log leakage. No TLS traffic key export is enabled, including
-when `SSLKEYLOGFILE` is set. Tests and the demo generate new credentials; no cryptographic
-secret is hard-coded. Test byte markers are message fixtures, not cryptographic keys.
+Tests cover protocol validation, TLS authentication, chat gating, dual verification, bidirectional messages, recovery, induced conditions, browser-origin checks, and payload leakage into logs or storage. Local acceptance tests use real TLS with automated verification decisions; they do not replace physical two-person testing.
 
-This is an experimental local prototype. Its trusted bootstrap creates both endpoint
-identities on one machine. For separate machines, transfer only the appropriate endpoint
-directory securely; never distribute the CA private key or the other endpoint's key.
-Protect public trust/pin files and encrypted key files with OS access controls. Default
-Bob certificates cover localhost, 127.0.0.1 and bob.local; other names need properly
-provisioned certificates. Do not disable hostname validation to bypass this requirement.
-Identity certificates expire after 30 days; the prototype does not renew or revoke
-them. Adaptive traffic-key renewal uses fresh TLS sessions, not identity-key replacement.
-Human out-of-band verification remains simulated. Python cannot
-guarantee wiping all secret bytes from memory. Endpoint/OS compromise is outside scope.
+The recorded test environment is **Windows, Python 3.10.11, and OpenSSL 1.1.1t**. This older environment is retained as test evidence; runtime upgrades require revalidation. Exact dependency versions are in [requirements.txt](requirements.txt), and results are recorded in [BUILD_STATUS.md](BUILD_STATUS.md).
 
-## Raw metadata
+## Additional demos
 
-Each secure connection exposes `connection.metrics`. Read
-`connection.metrics.collector.measurements` for its bounded in-memory signal stream.
-Pass a shared `ContextSignalCollector` to `connect(..., collector=collector)` to count
-reconnects in the same process; Bob shares one collector across its connections.
+The repository also preserves the original single-machine dashboard and deterministic experiments. They are optional and are not needed to run the two-device chat.
 
-Records contain UTC timestamp, session ID, a symmetric SHA-256 relationship ID derived
-from both public identity fingerprints, signal name, raw value, source and
-`normalized_value=None`. Normalization is separate from the raw collector; SQLite stores
-relationships, sessions, trust history, verification/key events and ordered audit records.
+```powershell
+# Original local dashboard
+.\.venv\Scripts\python.exe -m dashboard.app
 
-- Handshake latency: Alice measures TCP + TLS connection time (before reading the
-  session ID); Bob measures its accepted-socket TLS handshake. Sources distinguish them.
-- RTT: Alice's sequential echo exchanges report measured application round trips,
-  including processing/scheduling overhead. Variation is population standard deviation
-  over the last 32 samples. Generic connections report RTT unavailable until an
-  application records a matched round trip; no RTT is inferred from unrelated messages.
-- Continuity: authenticated relationship ID and observed peer IP. IP is not proof of
-  device identity or network-path continuity; port changes are deliberately excluded.
-- Timing: intervals between completed frames, separately for each direction. The
-  first interval is unavailable, not zero.
-- Establishments: successful authenticated sessions for that relationship in the last
-  60 seconds, including the initial session. This is not TLS 1.3 renegotiation or a
-  count of failed handshakes. Counts are local to the collector and reset on restart.
+# Deterministic experiments
+.\.venv\Scripts\python.exe -m experiments.sudden
+.\.venv\Scripts\python.exe -m experiments.evaluation
+```
 
-Metadata hooks receive timestamps/descriptors only, never payloads. The collector
-retains the latest 1,024 records by default and rejects unexpected fields. Missing
-measurements remain `None`; metadata anomalies do not establish that an attack occurred.
+The original dashboard uses explicitly simulated verification. It shares UI port `8766` with chat, so stop one before launching the other on the same laptop. Read the [experiment documentation](docs/experiments.md) for more information.
 
-Dynamic metadata expires after 30 seconds. Explicit stale/duplicate/out-of-order observations
-are rejected within retained collector history. Persisted baselines use only authenticated
-peer IP updates after successful simulated verification; numerical defaults are not auto-trained.
+## Security and scope
 
-Implementation references: [Python TLS](https://docs.python.org/3.10/library/ssl.html),
-[accepted-socket TLS](https://docs.python.org/3.10/library/asyncio-eventloop.html#asyncio.loop.connect_accepted_socket),
-and [cryptography X.509](https://cryptography.io/en/stable/x509/tutorial/).
+- Chat text is limited to **4 KiB of UTF-8 data** per message; empty messages are rejected. The default conversation limit is 500 recent messages.
+- Message bodies, passwords, private keys, and TLS secrets are not written to application telemetry or audit storage. SQLite retains connection and trust metadata.
+- Encrypted credential bundles depend on trusted provisioning and transfer. The prototype does not provide production certificate renewal or revocation.
+- Local users, endpoint software, and the operating system are trusted. Python cannot guarantee complete secret-memory erasure.
+- A high trust score is not proof that a connection is attack-free. Controlled anomalies demonstrate system behavior, not real-world attack-detection accuracy.
+- Internet relays, accounts, group chat, attachments, and permanent message history are outside the project scope.
+
+## Documentation
+
+| Guide | Purpose |
+|---|---|
+| [Setup and troubleshooting](docs/two-device-operation.md) | Installation, bundle transfer, startup, and recovery |
+| [Architecture](docs/two-device-architecture.md) | Network boundaries, components, verification, and security limits |
+| [Presenter script](docs/two-device-presentation.md) | Guided demonstration and explanation of each control |
+| [Physical acceptance checklist](docs/two-device-acceptance.md) | Two complete test runs on separate laptops |
+| [Trust algorithms](docs/algorithms.md) | Normalization, EMA scoring, and trigger policy |
+| [Build status](BUILD_STATUS.md) | Implementation checkpoints and recorded test evidence |

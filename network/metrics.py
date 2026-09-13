@@ -37,10 +37,12 @@ class SessionMetrics:
                               {"direction": direction, "interval_ms": None if previous is None else (now - previous) * 1000},
                               "frame_completion")
 
-    def record_round_trip(self, elapsed_ms: float) -> None:
+    def record_round_trip(self, elapsed_ms: float, *, source="application_echo") -> None:
         """Application echo round trip, including peer processing; not kernel TCP RTT."""
         self._validate_duration(elapsed_ms)
+        if source not in {"application_echo", "authenticated_heartbeat"}:
+            raise ValueError("invalid round-trip source")
         self._rtts.append(elapsed_ms)
         self.collector.record(self.session, "rtt",
                               {"latest_ms": elapsed_ms, "variation_ms": pstdev(self._rtts) if len(self._rtts) > 1 else None,
-                               "sample_count": len(self._rtts)}, "application_echo")
+                               "sample_count": len(self._rtts)}, source)

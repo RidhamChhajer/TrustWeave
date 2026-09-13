@@ -1,5 +1,13 @@
 # Local prototype security review
 
+For the new two-device chat, see [chat security boundaries](two-device-architecture.md)
+and [operation/recovery guidance](two-device-operation.md). The historical review
+below concerns the original echo/dashboard/experiment paths: their simulated OOB
+comparison and echo-only Bob behavior do not describe the chat application. Chat
+requires dual human decisions, gates both directions, and does not rotate TLS on
+initial approval; successful reverification establishes fresh TLS. Physical
+two-laptop acceptance remains pending.
+
 Scope: cryptographic provisioning/TLS, framed transport, metadata/trust, verification
 gate/lifecycle, SQLite audit, dashboard and controlled experiment paths. This is a
 source review plus executable checks, not a penetration test or certification.

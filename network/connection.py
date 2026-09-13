@@ -74,7 +74,7 @@ class FramedConnection:
         if self._verification_pending:
             raise ConnectionFailure("identity verification required")
 
-    async def send(self, payload: bytes) -> None:
+    async def send(self, payload: bytes, *, permitted=None) -> None:
         self._check_open()
         if not isinstance(payload, bytes):
             raise TypeError("payload must be bytes")
@@ -85,6 +85,10 @@ class FramedConnection:
         async def write() -> None:
             async with self._send_lock:
                 self._check_open()
+                # Application gates are rechecked at the actual write boundary,
+                # after waiting for the send lock. Existing byte callers are unchanged.
+                if permitted is not None and not permitted():
+                    raise ConnectionFailure("application send is gated")
                 self._writer.write(struct.pack("!I", len(payload)) + payload)
                 await self._writer.drain()
                 if self.metrics is not None:
