@@ -1,6 +1,17 @@
 # Build checkpoint
 
-## Current two-device chat checkpoint - 2026-09-13
+## Security and runtime follow-up - 2026-09-14
+
+- User reports that basic chat between the two physical laptops worked. This is user-reported evidence; the two complete MATCH recovery / MISMATCH acceptance runs remain unconfirmed.
+- Recovery admission hardened: Bob checks the previous channel's continuation proof before assigning the chat slot. Invalid or silent candidates cannot consume the reservation; admission also checks its monotonic deadline.
+- Regression evidence: all four new adversarial cases failed before the fix; all nine recovery tests passed afterward on the old runtime (3.19s). Cases include wrong proof, malformed input, silent authenticated competition, and expired approval.
+- Python 3.14.7 installed alongside Python 3.10; new isolated `.venv314` uses OpenSSL 3.5.7. Setup, provisioning and chat launchers use the new environment and reject older runtimes. The old environment remains intact.
+- Runtime validation complete: **179 passed in 18.05s**; `pip check` clean; all ten final-demo checks passed. A stalled-handshake test cleanup was corrected to close its clients before awaiting server shutdown, as required by current Python. No security assertion was removed.
+- Measured calibration pilot complete: eight real loopback TLS sessions, whole-session training/held-out split, three predeclared EMA candidates. Default alpha 0.30 selected; held-out false prompts 0/4 sessions, induced delays detected 2/2. These small counts do not establish real-world accuracy. Weights and normalization remain heuristic; no live policy change. See `docs/measured-calibration.md`.
+- Current branch: `main`. Changes are local. Basic physical chat evidence predates this upgrade; both devices need the updated setup and a physical recovery/rejection retest.
+- Handoff checks: `setup-demo.cmd` completed successfully; Alice bundle `--check` reported Python 3.14.7 / OpenSSL 3.5.7; `git diff --check` passed. Existing identity bundles were preserved.
+
+## Historical two-device chat checkpoint - 2026-09-13
 
 - Branch: `codex/two-device-chat`.
 - Two-device chat phases 0-12 and Phase 14 are complete with their recorded automated checks. Phase 13 physical acceptance remains deferred.

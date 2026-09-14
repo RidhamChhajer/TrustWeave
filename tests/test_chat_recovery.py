@@ -8,6 +8,64 @@ from chat.coordinator import State
 from tests.test_chat_bob import make_bob
 from tests.test_chat_messages import activate
 from tests.test_chat_verification import wait_for
+from chat.protocol import decode, encode, envelope
+from network.connection import ConnectionFailure
+from time import perf_counter
+
+
+@pytest.mark.parametrize("candidate", ["wrong", "malformed", "silent", "expired"])
+def test_recovery_candidate_cannot_take_reserved_slot(tmp_path, candidate):
+    bob, bundles, passwords = make_bob(tmp_path)
+    alice = AliceRuntime(bundles["alice"], bob.config, tmp_path / "alice.db")
+
+    async def run():
+        connections = []
+        try:
+            await activate(alice, bob, passwords)
+            alice._stop_measurements = True
+            alice.assessment_task.cancel()
+            await asyncio.gather(alice.assessment_task, return_exceptions=True)
+            request = envelope("demo_mode", "alice", mode="reconnect_burst")
+            await alice.gate.control(request)
+            await wait_for(lambda: bob.gate.state == State.RECONNECTING)
+            await alice.gate.connection.close()
+            await wait_for(lambda: not bob.occupied)
+            reservation = bob.resume
+            old_connection = bob.gate.connection
+            proof = envelope("verification_result", "alice", request_id=request["id"],
+                             relationship=reservation["relationship"], result="SUCCESS", recovery=True)
+            intruder = await alice.establish()  # Valid certificate, no continuation proof.
+            connections.append(intruder)
+            if candidate == "expired":
+                reservation["deadline"] = perf_counter() - 1
+                await intruder.send(encode(proof))
+            elif candidate == "wrong":
+                await intruder.send(encode({**proof, "request_id": "0" * 32}))
+            elif candidate == "malformed":
+                await intruder.send(b"invalid JSON")
+            if candidate != "silent":
+                with pytest.raises(ConnectionFailure):
+                    await asyncio.wait_for(intruder.receive(), 3)
+            assert bob.gate.state == State.RECONNECTING
+            assert bob.resume is reservation
+            assert bob.gate.connection is old_connection
+            assert not bob.occupied
+            if candidate == "expired":
+                return
+            legitimate = await alice.establish()
+            connections.append(legitimate)
+            await legitimate.send(encode(proof))
+            ready = decode(await asyncio.wait_for(legitimate.receive(), 3))
+            assert ready["notice"] == "ready"
+            await legitimate.send(encode(envelope("session_notice", "alice", notice="ready")))
+            await wait_for(lambda: bob.gate.state == State.ACTIVE)
+            assert bob.resume is None
+        finally:
+            for connection in connections:
+                await connection.close()
+            await asyncio.wait_for(alice.close(), 3)
+            await asyncio.wait_for(bob.close(), 3)
+    asyncio.run(run())
 
 
 @pytest.mark.parametrize("outcome", ["MATCH", "MISMATCH", "unavailable", "changed", "rotation"])

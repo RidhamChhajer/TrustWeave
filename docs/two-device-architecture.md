@@ -64,6 +64,14 @@ terminal for the current session; retry requires an explicit new session.
    the approval on the replacement channel. A readiness exchange precedes resumed
    chat. The public session/key-epoch identifier changes; it is not a secret key.
 
+Bob reads the first recovery proof before assigning the chat slot. A candidate has
+at most two seconds, bounded further by the remaining reservation lifetime. Invalid
+or silent candidates close without invalidating the reservation. Admission rechecks
+the reservation, monotonic deadline and slot ownership after reading the proof.
+Mutual TLS and certificate pinning still precede this application check. An attacker
+with stolen credentials can still exhaust bounded transport capacity; this is not a
+general denial-of-service defense or protection against a compromised endpoint.
+
 Scheduled chat key rotation also requires dual comparison. The authenticated,
 user-requested reconnect-burst demonstration performs at most three real reconnects
 of an already verified relationship; it does not silently approve a human prompt.

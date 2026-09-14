@@ -5,8 +5,8 @@ laptops and the two clean-start acceptance runs must still be checked by the pre
 
 ## Setup and trusted transfer
 
-1. Install Python 3.10 or newer with OpenSSL TLS 1.3 on each laptop. The pinned
-   dependencies were tested with Python 3.10 on Windows. Double-click
+1. Install Python 3.14 with OpenSSL 3.5 or newer on each laptop. The pinned
+   dependencies were tested with Python 3.14.7 / OpenSSL 3.5.7 on Windows. Double-click
    `setup-demo.cmd` in the project folder on each device. Keep the project code
    together; do not copy a virtual environment between laptops.
 2. On the trusted provisioning laptop only, run `provision-demo.cmd`. Choose three
@@ -20,7 +20,7 @@ laptops and the two clean-start acceptance runs must still be checked by the pre
 4. Signed manifests detect partial bundle alteration. The trusted USB transfer is
    the trust anchor: replacing an entire bundle including its CA requires external
    fingerprint comparison to detect. Inspection prints only role and public pins:
-   `.venv\Scripts\python.exe -m chat.bundles inspect demo-identities\bob-bundle`.
+   `.venv314\Scripts\python.exe -m chat.bundles inspect demo-identities\bob-bundle`.
 5. Both laptops join the same **private Wi-Fi**. If Windows Firewall prompts, allow
    Python on **Private networks only**. These scripts never modify the firewall.
    Do not enable Public-network access. Guest Wi-Fi/client isolation may prevent
@@ -69,7 +69,7 @@ and restarts the listener; Alice explicitly reconnects and both compare again.
 
 ## Troubleshooting and preflight
 
-- Run `.venv\Scripts\python.exe -m chat.app bob --bundle demo-identities\bob-bundle --check`
+- Run `.venv314\Scripts\python.exe -m chat.app bob --bundle demo-identities\bob-bundle --check`
   (substitute Alice's role/path for Alice) for public preflight output.
 - **Wrong password/bundle:** retry locally with the correct password; inspect or
   replace an altered/expired bundle through trusted provisioning. Never disable

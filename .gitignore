@@ -1,5 +1,6 @@
 # Python environments and generated files
 .venv/
+.venv314/
 venv/
 env/
 __pycache__/

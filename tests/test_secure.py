@@ -198,9 +198,11 @@ def test_client_handshake_timeout(identities):
                               creds["alice"], lambda: passwords["alice"])
         finally:
             server.close()
-            await server.wait_closed()
+            # wait_closed waits for active clients on current Python. Close the
+            # deliberately stalled handshake transports before joining the server.
             for writer in writers:
                 await close_writer(writer, 0.3)
+            await asyncio.wait_for(server.wait_closed(), 1)
     asyncio.run(run())
 
 

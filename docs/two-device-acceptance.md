@@ -1,6 +1,6 @@
 # Phase 13: physical two-laptop acceptance record
 
-Status: **NOT RUN**. Local automated TLS checks do not satisfy this gate.
+Status: **PARTIAL, USER-REPORTED** (2026-09-14). The user reports successful chat between two laptops. The detailed recovery, mismatch and clean-start checks below remain unconfirmed. This report predates the runtime/recovery changes; retest both upgraded devices. Local automated TLS checks do not satisfy this gate.
 Use two Windows laptops on the same private Wi-Fi. Follow
 [operation instructions](two-device-operation.md) for setup and trusted USB transfer.
 Complete both columns from clean application starts. Do not record passwords,

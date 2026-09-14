@@ -1,10 +1,12 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-if not exist ".venv\Scripts\python.exe" goto missing
+if not exist ".venv314\Scripts\python.exe" goto missing
+".venv314\Scripts\python.exe" -m chat.check_runtime
+if errorlevel 1 goto missing
 set "chatBundle=%~dp0demo-identities\bob-bundle"
 if not "%~1"=="" set "chatBundle=%~1"
-".venv\Scripts\python.exe" -m chat.app bob --bundle "%chatBundle%"
+".venv314\Scripts\python.exe" -m chat.app bob --bundle "%chatBundle%"
 set "chatExit=%errorlevel%"
 pause
 exit /b %chatExit%

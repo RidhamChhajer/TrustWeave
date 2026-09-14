@@ -10,7 +10,7 @@ from chat.bridge import Events
 from chat.bundles import credentials_from_bundle
 from chat.config import ChatConfig
 from chat.coordinator import Coordinator, State
-from chat.protocol import MAX_ENVELOPE, ChatProtocolError, DuplicateCache, envelope
+from chat.protocol import MAX_ENVELOPE, ChatProtocolError, DuplicateCache, decode, envelope
 from chat.verification import DualVerification
 from config.settings import Settings
 from crypto.key_exchange import context
@@ -241,12 +241,17 @@ class Endpoint:
             raise ChatProtocolError()
 
     async def recovery_approved(self):
-        self.resume = {"id": self.dual.id, "relationship": self.dual.relationship}
+        self.reserve_recovery(self.dual.id, self.dual.relationship)
+
+    def reserve_recovery(self, request_id, relationship):
+        self.resume = {"id": request_id, "relationship": relationship,
+                       "deadline": perf_counter() + self.config.verification_timeout}
+        reservation = self.resume
         self.gate.transition(State.RECONNECTING)
         self.fail_deliveries()
         async def expire():
             await asyncio.sleep(self.config.verification_timeout)
-            if self.resume:
+            if self.resume is reservation:
                 await self.restrict("TLS recovery timed out. Start a new session.")
         self.recovery_timer = asyncio.create_task(expire())
 
@@ -345,14 +350,7 @@ class BobRuntime(Endpoint):
             if mode == "reconnect_burst":
                 if self.gate.state != State.ACTIVE:
                     raise ChatProtocolError()
-                self.resume = {"id": message["id"], "relationship": self.gate.connection.metrics.session.relationship_id}
-                self.gate.transition(State.RECONNECTING)
-                self.fail_deliveries()
-                async def expire():
-                    await asyncio.sleep(self.config.verification_timeout)
-                    if self.resume:
-                        await self.restrict("Reconnect burst timed out. Start a new session.")
-                self.recovery_timer = asyncio.create_task(expire())
+                self.reserve_recovery(message["id"], self.gate.connection.metrics.session.relationship_id)
             self.publish()
         elif message["type"] in {"ping", "chat"} and self.mode == "latency":
             if self.delayed.full():
@@ -411,14 +409,37 @@ class BobRuntime(Endpoint):
         if self.occupied or self.gate.state not in {State.CONNECTING, State.RECONNECTING}:
             await connection.close()
             return
-        if self.gate.state == State.RECONNECTING and (not self.resume or connection.metrics.session.relationship_id != self.resume["relationship"]):
-            await connection.close()
-            await self.restrict()
-            return
+        proof = None
+        if self.gate.state == State.RECONNECTING:
+            reservation = self.resume
+            try:
+                if not reservation or connection.metrics.session.relationship_id != reservation["relationship"]:
+                    raise ChatProtocolError()
+                # TLS authenticates the identity; the old channel's unpredictable
+                # request ID proves continuity. Candidates never own the chat slot.
+                remaining = reservation["deadline"] - perf_counter()
+                if remaining <= 0:
+                    raise ChatProtocolError()
+                proof = decode(await asyncio.wait_for(connection.receive(), min(2, remaining)))
+                if (proof["type"] != "verification_result" or proof["sender"] != "alice"
+                    or proof["request_id"] != reservation["id"]
+                    or proof["relationship"] != reservation["relationship"]
+                    or not proof["recovery"] or proof["result"] != "SUCCESS"
+                    or self.resume is not reservation or self.occupied or self._closing
+                    or self.gate.state != State.RECONNECTING
+                    or perf_counter() >= reservation["deadline"]):
+                    raise ChatProtocolError()
+                self.gate.seen.accept(proof["id"])
+            except Exception:
+                await connection.close()
+                return
+        # No await between the final admission check and claiming ownership.
         self.occupied = True
         self.gate.attach(connection)
         self.publish()
         try:
+            if proof is not None:
+                await self.handle(proof)
             await self.read_loop(connection)
         finally:
             self.occupied = False

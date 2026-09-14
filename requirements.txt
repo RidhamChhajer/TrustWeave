@@ -1,4 +1,4 @@
-# Exact resolution tested on Python 3.10 / Windows; includes transitive dependencies.
+# Exact resolution tested on Python 3.14.7 / Windows; includes transitive dependencies.
 annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.15.1

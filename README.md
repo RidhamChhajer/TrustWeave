@@ -16,7 +16,7 @@ The two laptops are called **Alice** and **Bob**:
 
 Both users compare independently calculated safety codes before chat becomes available. If connection behavior triggers another verification, messaging pauses. Successful reverification establishes a fresh TLS session; a mismatch, cancellation, or timeout closes the session.
 
-**Project status:** Implementation and automated checks are complete. The latest recorded suite has **170 passing tests**. Physical two-laptop acceptance testing is still pending. This is an academic prototype, not a production messaging service.
+**Project status:** The latest suite has **179 passing tests**. Basic two-laptop chat success is user-reported; full physical recovery and rejection acceptance remains unconfirmed. This is an academic prototype, not a production messaging service.
 
 ## Features
 
@@ -32,7 +32,7 @@ Both users compare independently calculated safety codes before chat becomes ava
 ### Requirements
 
 - Two Windows laptops on the same private Wi-Fi network.
-- Python 3.10 or newer with TLS 1.3 support.
+- Python 3.14 with OpenSSL 3.5 or newer and TLS 1.3 support.
 - Internet access for the initial dependency installation.
 - A USB drive for transferring the appropriate identity bundle.
 
@@ -117,16 +117,16 @@ Only one condition runs at a time. Verification depends on the measured trust sc
 From the repository folder in PowerShell:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\python.exe -m client.final_demo
-.\.venv\Scripts\python.exe -m pip check
+py -3.14 -m venv .venv314
+.\.venv314\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv314\Scripts\python.exe -m pytest -q
+.\.venv314\Scripts\python.exe -m client.final_demo
+.\.venv314\Scripts\python.exe -m pip check
 ```
 
 Tests cover protocol validation, TLS authentication, chat gating, dual verification, bidirectional messages, recovery, induced conditions, browser-origin checks, and payload leakage into logs or storage. Local acceptance tests use real TLS with automated verification decisions; they do not replace physical two-person testing.
 
-The recorded test environment is **Windows, Python 3.10.11, and OpenSSL 1.1.1t**. This older environment is retained as test evidence; runtime upgrades require revalidation. Exact dependency versions are in [requirements.txt](requirements.txt), and results are recorded in [BUILD_STATUS.md](BUILD_STATUS.md).
+The revalidated environment is **Windows, Python 3.14.7, and OpenSSL 3.5.7**, with **179 tests passing**. The setup and launch scripts use `.venv314`; an existing `.venv` is preserved. Run setup on each laptop after upgrading Python. Exact dependencies are in [requirements.txt](requirements.txt), and results are recorded in [BUILD_STATUS.md](BUILD_STATUS.md).
 
 ## Additional demos
 
@@ -134,11 +134,11 @@ The repository also preserves the original single-machine dashboard and determin
 
 ```powershell
 # Original local dashboard
-.\.venv\Scripts\python.exe -m dashboard.app
+.\.venv314\Scripts\python.exe -m dashboard.app
 
 # Deterministic experiments
-.\.venv\Scripts\python.exe -m experiments.sudden
-.\.venv\Scripts\python.exe -m experiments.evaluation
+.\.venv314\Scripts\python.exe -m experiments.sudden
+.\.venv314\Scripts\python.exe -m experiments.evaluation
 ```
 
 The original dashboard uses explicitly simulated verification. It shares UI port `8766` with chat, so stop one before launching the other on the same laptop. Read the [experiment documentation](docs/experiments.md) for more information.
@@ -150,6 +150,7 @@ The original dashboard uses explicitly simulated verification. It shares UI port
 - Encrypted credential bundles depend on trusted provisioning and transfer. The prototype does not provide production certificate renewal or revocation.
 - Local users, endpoint software, and the operating system are trusted. Python cannot guarantee complete secret-memory erasure.
 - A high trust score is not proof that a connection is attack-free. Controlled anomalies demonstrate system behavior, not real-world attack-detection accuracy.
+- Trust weights remain heuristic. A small [measured calibration pilot](docs/measured-calibration.md) compares settings using real TLS timing and separate held-out sessions; it does not validate attack detection.
 - Internet relays, accounts, group chat, attachments, and permanent message history are outside the project scope.
 
 ## Documentation
