@@ -28,6 +28,6 @@ echo Setup complete. See docs\two-device-operation.md for trusted provisioning a
 pause
 exit /b 0
 :failed
-echo Setup failed. Install Python 3.14 with OpenSSL 3.5 or newer, check internet access, and retry.
+echo Setup failed. Install Python 3.14 with OpenSSL 3.0 or newer and TLS 1.3 support, check internet access, and retry.
 pause
 exit /b 1

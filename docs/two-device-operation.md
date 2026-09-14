@@ -5,7 +5,7 @@ laptops and the two clean-start acceptance runs must still be checked by the pre
 
 ## Setup and trusted transfer
 
-1. Install Python 3.14 with OpenSSL 3.5 or newer on each laptop. The pinned
+1. Install Python 3.14 with OpenSSL 3.0 or newer and TLS 1.3 support on each laptop. The pinned
    dependencies were tested with Python 3.14.7 / OpenSSL 3.5.7 on Windows. Double-click
    `setup-demo.cmd` in the project folder on each device. Keep the project code
    together; do not copy a virtual environment between laptops.

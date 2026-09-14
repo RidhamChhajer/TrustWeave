@@ -16,7 +16,7 @@ The two laptops are called **Alice** and **Bob**:
 
 Both users compare independently calculated safety codes before chat becomes available. If connection behavior triggers another verification, messaging pauses. Successful reverification establishes a fresh TLS session; a mismatch, cancellation, or timeout closes the session.
 
-**Project status:** The latest suite has **179 passing tests**. Basic two-laptop chat success is user-reported; full physical recovery and rejection acceptance remains unconfirmed. This is an academic prototype, not a production messaging service.
+**Project status:** The latest suite has **181 passing tests**. Basic two-laptop chat success is user-reported; full physical recovery and rejection acceptance remains unconfirmed. This is an academic prototype, not a production messaging service.
 
 ## Features
 
@@ -32,7 +32,7 @@ Both users compare independently calculated safety codes before chat becomes ava
 ### Requirements
 
 - Two Windows laptops on the same private Wi-Fi network.
-- Python 3.14 with OpenSSL 3.5 or newer and TLS 1.3 support.
+- Python 3.14 with OpenSSL 3.0 or newer and TLS 1.3 support.
 - Internet access for the initial dependency installation.
 - A USB drive for transferring the appropriate identity bundle.
 
@@ -126,7 +126,7 @@ py -3.14 -m venv .venv314
 
 Tests cover protocol validation, TLS authentication, chat gating, dual verification, bidirectional messages, recovery, induced conditions, browser-origin checks, and payload leakage into logs or storage. Local acceptance tests use real TLS with automated verification decisions; they do not replace physical two-person testing.
 
-The revalidated environment is **Windows, Python 3.14.7, and OpenSSL 3.5.7**, with **179 tests passing**. The setup and launch scripts use `.venv314`; an existing `.venv` is preserved. Run setup on each laptop after upgrading Python. Exact dependencies are in [requirements.txt](requirements.txt), and results are recorded in [BUILD_STATUS.md](BUILD_STATUS.md).
+The revalidated environment is **Windows, Python 3.14.7, and OpenSSL 3.5.7**, with **181 tests passing**. OpenSSL 3.0+ with TLS 1.3 is accepted; the minimum-version check is unit-tested, while full-suite evidence uses 3.5.7. The setup and launch scripts use `.venv314`; an existing `.venv` is preserved. Run setup on each laptop after upgrading Python. Exact dependencies are in [requirements.txt](requirements.txt), and results are recorded in [BUILD_STATUS.md](BUILD_STATUS.md).
 
 ## Additional demos
 

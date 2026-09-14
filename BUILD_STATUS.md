@@ -1,5 +1,11 @@
 # Build checkpoint
 
+## OpenSSL compatibility update - 2026-09-14
+
+- Minimum accepted OpenSSL version is now 3.0, with TLS 1.3 support still required. Python 3.14 remains required. Setup messages and operation documentation match the runtime check.
+- Tests cover OpenSSL 3.0 acceptance, older OpenSSL rejection, missing TLS 1.3 rejection, and the Python floor.
+- Full suite: **181 passed in 18.57s** on Python 3.14.7 / OpenSSL 3.5.7. OpenSSL 3.0 admission is unit-tested; an actual OpenSSL 3.0 installation still needs the other laptop's run.
+
 ## Security and runtime follow-up - 2026-09-14
 
 - User reports that basic chat between the two physical laptops worked. This is user-reported evidence; the two complete MATCH recovery / MISMATCH acceptance runs remain unconfirmed.
